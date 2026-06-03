@@ -30,13 +30,13 @@ async function getConfigData() {
     config = {
       user_id: USER_ID,
       min_daily_gp_for_streak: 30,
-      streak_freeze_cost: 100,
+      streak_freeze_cost: 200,
       max_freeze_tokens: 3,
       penalize_missed_recurring: true,
       penalize_overdue_deadline: false,
-      recurring_penalty_pct: 0.1,
-      deadline_late_penalty_pct: 0.2,
-      deadline_very_late_penalty_pct: 0.5,
+      recurring_penalty_pct: 50,
+      deadline_late_penalty_pct: 25,
+      deadline_very_late_penalty_pct: 50,
     }
   }
 

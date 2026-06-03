@@ -3,6 +3,7 @@ import type { UserStats, Reward, RewardClaim, TaskCompletion, LedgerEntry, Rewar
 import TreasuryHero from '@/components/rewards/TreasuryHero'
 import MilestoneCard from '@/components/rewards/MilestoneCard'
 import LedgerRow from '@/components/rewards/LedgerRow'
+import FreezeTokenShopCard from '@/components/rewards/FreezeTokenShopCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -122,6 +123,25 @@ export default async function RewardsPage() {
         level={stats.current_level} 
         heroClass={heroClass} 
       />
+
+      {/* System Shop Section */}
+      <section className="mb-12">
+        <div className="flex justify-between items-end mb-6">
+          <div>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface">System Shop</h2>
+            <p className="font-label-mono text-label-mono text-on-surface-variant mt-1 uppercase tracking-wider">
+              Essential utility items
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <FreezeTokenShopCard 
+            freezeTokens={stats.freeze_tokens}
+            gpBalance={stats.gp_balance}
+          />
+        </div>
+      </section>
 
       {/* Milestone Spoils Section */}
       <section className="mb-12">

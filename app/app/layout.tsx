@@ -4,6 +4,7 @@ import './globals.css'
 import DesktopSideNav from '@/components/nav/DesktopSideNav'
 import MobileBottomNav from '@/components/nav/MobileBottomNav'
 import ModalsProvider from '@/components/modals/ModalsProvider'
+import DailyCheckTrigger from '@/components/shared/DailyCheckTrigger'
 import { supabase, USER_ID } from '@/lib/supabase'
 import type { Category } from '@/lib/types'
 
@@ -73,6 +74,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full bg-background text-on-background antialiased flex flex-col md:flex-row">
+        <DailyCheckTrigger />
         {/* ModalsProvider — wraps full app so any component can openForgeQuest() */}
         <ModalsProvider categories={categories}>
           {/* Desktop side nav — hidden on mobile */}

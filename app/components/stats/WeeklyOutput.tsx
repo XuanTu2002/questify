@@ -1,7 +1,30 @@
+'use client'
+
 import type { DailyLog } from '@/lib/types'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell
+} from 'recharts'
 
 interface WeeklyOutputProps {
   logs: DailyLog[] // Should be the last 7 days, including today
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-surface-container-highest text-on-surface text-[10px] md:text-xs font-label-mono px-3 py-2 rounded-lg border border-outline-variant/30 shadow-lg">
+        <p className="font-bold mb-1 text-on-surface-variant uppercase tracking-wider">{label}</p>
+        <p className="text-primary font-bold">{payload[0].value} XP</p>
+      </div>
+    )
+  }
+  return null
 }
 
 export default function WeeklyOutput({ logs }: WeeklyOutputProps) {
@@ -18,18 +41,15 @@ export default function WeeklyOutput({ logs }: WeeklyOutputProps) {
     const log = logs.find(l => l.log_date === dateStr)
     return {
       date: dateStr,
-      dayName: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+      dayName: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
       xp: log ? log.xp_earned : 0,
       isToday: dateStr === today.toISOString().slice(0, 10)
     }
   })
 
-  // Find max XP for scaling
-  const maxXP = Math.max(...data.map(d => d.xp), 100) // minimum scale 100
-
   return (
-    <section className="glass-panel rounded-xl p-6 relative overflow-hidden">
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-outline-variant/30">
+    <section className="glass-panel rounded-xl p-6 relative overflow-hidden flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-outline-variant/30 shrink-0">
         <h3 className="font-body-md font-bold text-on-surface flex items-center uppercase tracking-wider">
           <span className="material-symbols-outlined mr-2 text-primary">bar_chart</span>
           Weekly Output
@@ -37,30 +57,44 @@ export default function WeeklyOutput({ logs }: WeeklyOutputProps) {
         <span className="font-label-mono text-xs text-on-surface-variant">XP Earned</span>
       </div>
 
-      <div className="flex items-end justify-between h-40 gap-2">
-        {data.map((day) => {
-          const heightPct = Math.max((day.xp / maxXP) * 100, 2) // min 2% height for empty days
-          return (
-            <div key={day.date} className="flex flex-col items-center gap-2 flex-1 group">
-              <div 
-                className="w-full max-w-[40px] rounded-t-sm transition-all relative"
-                style={{ 
-                  height: `${heightPct}%`, 
-                  backgroundColor: day.isToday ? '#f2ca50' : 'rgba(255, 255, 255, 0.1)',
-                  boxShadow: day.isToday ? '0 0 10px rgba(242,202,80,0.5)' : 'none'
-                }}
-              >
-                {/* Tooltip on hover */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-highest text-on-surface text-[10px] font-label-mono px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                  {day.xp} XP
-                </div>
-              </div>
-              <span className={`font-label-mono text-[10px] uppercase tracking-wider ${day.isToday ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
-                {day.dayName}
-              </span>
-            </div>
-          )
-        })}
+      <div className="flex-1 w-full min-h-[160px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComponentTransfer in="blur" result="glow">
+                  <feFuncA type="linear" slope="0.5" />
+                </feComponentTransfer>
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <XAxis 
+              dataKey="dayName" 
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#99907c', fontSize: 10, fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+              dy={10}
+            />
+            <YAxis hide={true} />
+            <Tooltip 
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} 
+            />
+            <Bar dataKey="xp" radius={[4, 4, 0, 0]} minPointSize={4}>
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.isToday ? '#f2ca50' : 'rgba(255, 255, 255, 0.1)'} 
+                  filter={entry.isToday ? 'url(#goldGlow)' : undefined}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </section>
   )

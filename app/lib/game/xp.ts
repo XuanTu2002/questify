@@ -2,16 +2,15 @@
 
 /**
  * Cumulative XP needed to REACH level N.
- * Lv1: 50  |  Lv2: 200  |  Lv5: 1250  |  Lv10: 5000  |  Lv20: 20000
+ * Lv1: 0  |  Lv2: 50  |  Lv3: 200  |  Lv5: 800  |  Lv10: 4050
  */
-export const xpForLevel = (n: number): number => 50 * n * n
+export const xpForLevel = (n: number): number => 50 * (n - 1) * (n - 1)
 
 /**
  * Returns the current level from a total XP value.
- * The largest N such that 50*N² <= totalXP.
  */
 export const levelFromTotalXP = (totalXP: number): number =>
-  Math.max(1, Math.floor(Math.sqrt(totalXP / 50)))
+  Math.floor(Math.sqrt(Math.max(0, totalXP) / 50)) + 1
 
 /**
  * Returns progress within the current level:

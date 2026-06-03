@@ -78,3 +78,37 @@ export async function claimReward(rewardId: string): Promise<ActionResult> {
 
   return { success: true }
 }
+
+/** Buys a streak freeze token for 200 GP (Max 3) */
+export async function buyFreezeToken(): Promise<ActionResult> {
+  const { data: stats } = await supabase
+    .from('user_stats')
+    .select('gp_balance, freeze_tokens')
+    .eq('user_id', USER_ID)
+    .single()
+
+  if (!stats) return { success: false, error: 'User stats not found' }
+  
+  if (stats.freeze_tokens >= 3) {
+    return { success: false, error: 'Maximum freeze tokens (3) reached.' }
+  }
+
+  if (stats.gp_balance < 200) {
+    return { success: false, error: 'Insufficient GP (Requires 200 GP).' }
+  }
+
+  const { error } = await supabase
+    .from('user_stats')
+    .update({
+      gp_balance: stats.gp_balance - 200,
+      freeze_tokens: stats.freeze_tokens + 1
+    })
+    .eq('user_id', USER_ID)
+
+  if (error) return { success: false, error: 'Failed to purchase freeze token.' }
+
+  revalidatePath('/')
+  revalidatePath('/rewards')
+
+  return { success: true }
+}

@@ -16,6 +16,7 @@ export default function ConfigPanels({ config }: ConfigPanelsProps) {
   // Local state for optimistic UI on toggles
   const [missedPenalty, setMissedPenalty] = useState(config.penalize_missed_recurring)
   const [latePenalty, setLatePenalty] = useState(config.penalize_overdue_deadline)
+  const [hardcoreMode, setHardcoreMode] = useState(false)
   
   // Local state for slider
   const [streakBase, setStreakBase] = useState(config.min_daily_gp_for_streak)
@@ -94,6 +95,23 @@ export default function ConfigPanels({ config }: ConfigPanelsProps) {
                 className="sr-only peer" 
                 checked={latePenalty}
                 onChange={e => handleToggleChange('penalize_overdue_deadline', e.target.checked)}
+                disabled={isPending}
+              />
+              <div className="w-11 h-6 bg-surface-dim rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-body-md text-on-surface mb-0.5">Hardcore Mode</div>
+              <div className="text-xs text-error/80">Extreme: longest streak reset to 0 on any miss.</div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={hardcoreMode}
+                onChange={e => setHardcoreMode(e.target.checked)}
                 disabled={isPending}
               />
               <div className="w-11 h-6 bg-surface-dim rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"></div>
