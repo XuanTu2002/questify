@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Questify - Stats</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&amp;family=JetBrains+Mono:wght@400..700&amp;family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed-variant": "#6900b3",
+                        "on-primary-fixed-variant": "#574500",
+                        "outline": "#99907c",
+                        "on-surface-variant": "#d0c5af",
+                        "on-secondary-container": "#004d44",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#00201c",
+                        "surface-container": "#122131",
+                        "surface-container-low": "#0d1c2d",
+                        "surface-bright": "#2c3a4c",
+                        "primary-container": "#d4af37",
+                        "primary": "#f2ca50",
+                        "surface-container-high": "#1c2b3c",
+                        "on-primary": "#3c2f00",
+                        "on-primary-fixed": "#241a00",
+                        "primary-fixed": "#ffe088",
+                        "on-surface": "#d4e4fa",
+                        "background": "#051424",
+                        "secondary-container": "#03c6b2",
+                        "on-tertiary-fixed": "#2c0051",
+                        "tertiary-fixed-dim": "#ddb7ff",
+                        "primary-fixed-dim": "#e9c349",
+                        "inverse-on-surface": "#233143",
+                        "secondary-fixed": "#62fae3",
+                        "on-primary-container": "#554300",
+                        "tertiary-container": "#d09eff",
+                        "on-tertiary-container": "#6700b0",
+                        "secondary-fixed-dim": "#3cddc7",
+                        "outline-variant": "#4d4635",
+                        "surface-dim": "#051424",
+                        "surface": "#051424",
+                        "on-secondary-fixed-variant": "#005047",
+                        "on-error": "#690005",
+                        "surface-variant": "#273647",
+                        "on-secondary": "#003731",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#44e2cd",
+                        "on-tertiary": "#490080",
+                        "surface-tint": "#e9c349",
+                        "surface-container-lowest": "#010f1f",
+                        "surface-container-highest": "#273647",
+                        "tertiary-fixed": "#f0dbff",
+                        "inverse-surface": "#d4e4fa",
+                        "on-background": "#d4e4fa",
+                        "tertiary": "#e3c2ff",
+                        "inverse-primary": "#735c00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "stack-lg": "32px",
+                        "unit": "4px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "display-hero": ["Space Grotesk"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Space Grotesk"],
+                        "body-md": ["Geist"],
+                        "headline-lg-mobile": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "display-hero": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-mono": ["12px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); overflow-x: hidden; }
+        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel-active { border-color: theme('colors.primary'); box-shadow: 0 0 15px theme('colors.primary')50; }
+        .shimmer { position: relative; overflow: hidden; }
+        .shimmer::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 3s infinite; }
+        @keyframes shimmer { 100% { left: 150%; } }
+        
+        /* Bar Chart Styles */
+        .bar-container { display: flex; align-items: flex-end; justify-content: space-between; height: 160px; padding-top: 16px; border-bottom: 1px solid theme('colors.outline-variant'); }
+        .bar-group { display: flex; gap: 4px; align-items: flex-end; height: 100%; }
+        .bar-col { width: 12px; border-radius: 2px 2px 0 0; transition: height 0.3s ease; }
+        .bar-gold { background: linear-gradient(to top, theme('colors.primary-fixed-dim'), theme('colors.primary')); }
+        .bar-purple { background: linear-gradient(to top, theme('colors.tertiary-fixed-dim'), theme('colors.tertiary')); opacity: 0.7; }
+        
+        /* Heatmap Styles */
+        .heatmap-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+        .heat-cell { aspect-ratio: 1; border-radius: 2px; }
+        .heat-0 { background-color: rgba(255,255,255,0.05); }
+        .heat-1 { background-color: rgba(208, 158, 255, 0.3); }
+        .heat-2 { background-color: rgba(208, 158, 255, 0.6); }
+        .heat-3 { background-color: rgba(208, 158, 255, 0.9); }
+        .heat-4 { background-color: theme('colors.tertiary'); box-shadow: 0 0 8px theme('colors.tertiary')80; }
+
+        /* Hex Badge */
+        .hex-badge {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            background: linear-gradient(135deg, theme('colors.surface-container-high'), theme('colors.surface-container'));
+            border: 2px solid theme('colors.primary');
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col md:flex-row pb-safe font-body-md text-body-md">
+<!-- TopAppBar (Web & Mobile) -->
+<header class="bg-background dark:bg-background border-b border-outline-variant flex justify-between items-center px-container-margin py-4 w-full z-40 relative md:hidden">
+<div class="font-display-hero text-display-hero text-primary drop-shadow-[0_0_10px_rgba(242,202,80,0.5)] leading-none" style="font-size: 28px;">
+            Questify
+        </div>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:bg-surface-variant transition-colors rounded-full p-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-variant transition-colors rounded-full p-2 scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">mail</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-full py-6 bg-surface-container-high dark:bg-surface-container-high border-r border-outline-variant shadow-xl docked full-height left-0 w-64 fixed z-50">
+<div class="px-6 mb-8">
+<h1 class="font-headline-lg text-headline-lg text-primary">Questify</h1>
+</div>
+<div class="px-4 mb-8 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-outline-variant bg-surface-container">
+<img alt="Hero Portrait" class="w-full h-full object-cover" data-alt="A macro portrait of a futuristic masked operative with glowing purple and gold visor accents, set against a dark obsidian background. The lighting is cinematic, highlighting the intricate details of the high-tech armor. The mood is mysterious and intense, fitting a cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXGOMCvNYWveoVQGVQSfZH5KAuqW6b6kzQ4fMyz_Cd8o5yJHt_4Ua4YocqCGlfHJaDUr5uA_VWoxAI8_Utkl3H6FQYN0W63ensX-n4acpUJGZlqJyAUpIHj5G5qHvj5fX59EnmwHSpyBWeEMlXUJwRLsTtIkFaLQHPFTGzO3oYvNXxiBSo-NrV4TQLGNZ5DE8mHnrtgsw_v5CIb0wEg7-XLNOBPzpTQZAynX1GBiRQysbQ29W2oqGbcgTMzXneTayEOd07FQ3Zuhk"/>
+</div>
+<div>
+<div class="font-label-mono text-label-mono text-on-surface font-bold">Level 23 Shadow Walker</div>
+<div class="font-label-mono text-[10px] text-primary opacity-80">XP: 7,250 / 10,000</div>
+</div>
+</div>
+<ul class="flex flex-col gap-2 flex-grow px-2">
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+                    Character
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 transition-colors" href="#">
+<span class="material-symbols-outlined">backpack</span>
+                    Inventory
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 transition-colors" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+                    Skill Tree
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+                    Guilds
+                </a>
+</li>
+<li>
+<!-- Semantic mapping: "Stats" intent on this page doesn't directly map to these desktop tabs, but we'll assume Character/Profile is closest for overall progression, though the Bottom nav has a direct "Stats" tab. We will highlight Character as the fallback. -->
+<a class="flex items-center gap-4 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg mx-2 my-1 transition-colors font-bold shadow-[0_0_10px_rgba(212,175,55,0.3)]" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-bold hover:shadow-[0_0_15px_rgba(242,202,80,0.6)] transition-all">
+                Upgrade to Legend
+            </button>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-grow md:ml-64 p-container-margin md:p-8 overflow-y-auto mb-20 md:mb-0">
+<header class="mb-8 hidden md:block border-b border-outline-variant pb-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Combat Analytics</h2>
+<p class="text-on-surface-variant font-label-mono text-label-mono mt-2">Tracking performance metrics across all active campaigns.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Weekly Comparison Chart -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-8 relative group">
+<div class="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-primary/30 rounded-tl-xl"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-primary/30 rounded-br-xl group-hover:border-primary transition-colors"></div>
+<div class="flex justify-between items-center mb-6 border-b border-outline-variant/30 pb-4">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Weekly Output</h3>
+<div class="flex gap-4 font-label-mono text-label-mono text-on-surface-variant">
+<div class="flex items-center gap-2"><span class="w-3 h-3 bg-primary rounded-sm"></span> Current Week</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 bg-tertiary opacity-70 rounded-sm"></span> Previous Week</div>
+</div>
+</div>
+<div class="bar-container relative">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+<div class="border-t border-white w-full"></div>
+<div class="border-t border-white w-full"></div>
+<div class="border-t border-white w-full"></div>
+<div class="border-t border-white w-full"></div>
+</div>
+<!-- Bars -->
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 40%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 60%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Mon</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 55%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 45%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Tue</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 30%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 80%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Wed</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 70%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 65%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Thu</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 85%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 95%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Fri</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 40%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 20%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Sat</span>
+</div>
+<div class="flex flex-col items-center gap-2 z-10 w-full">
+<div class="bar-group">
+<div class="bar-col bar-purple" style="height: 20%;"></div>
+<div class="bar-col bar-gold shimmer" style="height: 50%;"></div>
+</div>
+<span class="font-label-mono text-label-mono text-on-surface-variant">Sun</span>
+</div>
+</div>
+</div>
+<!-- Prediction Card -->
+<div class="glass-panel glass-panel-active rounded-xl p-6 lg:col-span-4 flex flex-col justify-center items-center text-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary via-background to-background pointer-events-none"></div>
+<span class="material-symbols-outlined text-primary text-5xl mb-4 drop-shadow-[0_0_10px_rgba(242,202,80,0.8)]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Milestone Projection</h3>
+<p class="text-on-surface font-body-md">
+                    At this pace, you'll unlock <strong class="text-primary">Milestone 3</strong> in <span class="bg-primary/20 text-primary px-2 py-1 rounded font-label-mono border border-primary/30">~8 days</span>
+</p>
+<div class="mt-6 w-full">
+<div class="flex justify-between font-label-mono text-label-mono mb-2 text-on-surface-variant">
+<span>Progress</span>
+<span class="text-primary">78%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-low rounded-full overflow-hidden shadow-inner">
+<div class="h-full bg-gradient-to-r from-primary-fixed-dim to-primary w-[78%] shimmer relative"></div>
+</div>
+</div>
+</div>
+<!-- Heatmap Activity -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-6">
+<div class="flex justify-between items-center mb-6 border-b border-outline-variant/30 pb-4">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Quest Intensity Matrix</h3>
+<span class="font-label-mono text-label-mono text-on-surface-variant">8 Weeks</span>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col justify-around text-label-mono font-label-mono text-on-surface-variant/50 text-[10px]">
+<span>Mon</span>
+<span>Wed</span>
+<span>Fri</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between text-label-mono font-label-mono text-on-surface-variant/50 text-[10px] mb-2">
+<span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span><span>W8</span>
+</div>
+<!-- 7 days x 8 weeks grid approx -->
+<div class="grid grid-rows-7 grid-flow-col gap-[3px]">
+<!-- Week 1 -->
+<div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-0"></div>
+<!-- Week 2 -->
+<div class="heat-cell heat-2"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div>
+<!-- Week 3 -->
+<div class="heat-cell heat-0"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-1"></div>
+<!-- Week 4 -->
+<div class="heat-cell heat-3"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div>
+<!-- Week 5 -->
+<div class="heat-cell heat-1"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div>
+<!-- Week 6 -->
+<div class="heat-cell heat-2"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-1"></div>
+<!-- Week 7 -->
+<div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-0"></div>
+<!-- Week 8 -->
+<div class="heat-cell heat-3"></div><div class="heat-cell heat-4"></div><div class="heat-cell heat-3"></div><div class="heat-cell heat-2"></div><div class="heat-cell heat-1"></div><div class="heat-cell heat-0"></div><div class="heat-cell heat-1"></div>
+</div>
+</div>
+</div>
+<div class="mt-4 flex justify-end items-center gap-2 font-label-mono text-label-mono text-on-surface-variant/70 text-[10px]">
+<span>Less</span>
+<div class="flex gap-1">
+<div class="w-3 h-3 heat-0 rounded-sm"></div>
+<div class="w-3 h-3 heat-1 rounded-sm"></div>
+<div class="w-3 h-3 heat-2 rounded-sm"></div>
+<div class="w-3 h-3 heat-3 rounded-sm"></div>
+<div class="w-3 h-3 heat-4 rounded-sm"></div>
+</div>
+<span>More</span>
+</div>
+</div>
+<!-- Category Breakdown -->
+<div class="glass-panel rounded-xl p-6 lg:col-span-6">
+<div class="flex justify-between items-center mb-6 border-b border-outline-variant/30 pb-4">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Skill Distribution</h3>
+<span class="material-symbols-outlined text-on-surface-variant">pie_chart</span>
+</div>
+<div class="flex flex-col gap-5">
+<!-- Item 1 -->
+<div>
+<div class="flex justify-between text-label-mono font-label-mono mb-1">
+<span class="text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-primary">code</span> Development</span>
+<span class="text-on-surface-variant">45%</span>
+</div>
+<div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden border border-outline-variant/20">
+<div class="h-full bg-primary w-[45%]"></div>
+</div>
+</div>
+<!-- Item 2 -->
+<div>
+<div class="flex justify-between text-label-mono font-label-mono mb-1">
+<span class="text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-tertiary">design_services</span> UI/UX</span>
+<span class="text-on-surface-variant">30%</span>
+</div>
+<div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden border border-outline-variant/20">
+<div class="h-full bg-tertiary w-[30%] opacity-80"></div>
+</div>
+</div>
+<!-- Item 3 -->
+<div>
+<div class="flex justify-between text-label-mono font-label-mono mb-1">
+<span class="text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-secondary">forum</span> Communication</span>
+<span class="text-on-surface-variant">15%</span>
+</div>
+<div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden border border-outline-variant/20">
+<div class="h-full bg-secondary w-[15%] opacity-80"></div>
+</div>
+</div>
+<!-- Item 4 -->
+<div>
+<div class="flex justify-between text-label-mono font-label-mono mb-1">
+<span class="text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">fitness_center</span> Wellness</span>
+<span class="text-on-surface-variant">10%</span>
+</div>
+<div class="w-full h-3 bg-surface-container-low rounded-full overflow-hidden border border-outline-variant/20">
+<div class="h-full bg-on-surface-variant w-[10%] opacity-50"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl docked full-width bottom-0 rounded-t-xl fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-4 pb-safe shadow-lg md:hidden border-t-0">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-mono text-label-mono">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">swords</span>
+<span class="font-label-mono text-label-mono">Quests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">workspace_premium</span>
+<span class="font-label-mono text-label-mono">Rewards</span>
+</a>
+<!-- Active Tab: Stats -->
+<a class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(242,202,80,0.6)] border-b-2 border-primary pb-1 hover:text-primary transition-all scale-110 transition-transform duration-200 relative" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+<span class="font-label-mono text-label-mono font-bold">Stats</span>
+<div class="absolute bottom-[-10px] w-4 h-[2px] bg-primary rounded-t shadow-[0_-2px_10px_rgba(242,202,80,1)]"></div>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:text-primary transition-all scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1">settings</span>
+<span class="font-label-mono text-label-mono">Config</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for hover states on bars
+        document.querySelectorAll('.bar-col').forEach(bar => {
+            bar.addEventListener('mouseenter', () => {
+                bar.style.transform = 'scaleY(1.05)';
+                bar.style.transformOrigin = 'bottom';
+                bar.style.boxShadow = '0 0 15px rgba(242,202,80,0.4)';
+            });
+            bar.addEventListener('mouseleave', () => {
+                bar.style.transform = 'scaleY(1)';
+                bar.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

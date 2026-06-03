@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Questify - Tasks &amp; Quests</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Geist:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#6900b3",
+                        "on-primary-fixed-variant": "#574500",
+                        "outline": "#99907c",
+                        "on-surface-variant": "#d0c5af",
+                        "on-secondary-container": "#004d44",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#00201c",
+                        "surface-container": "#122131",
+                        "surface-container-low": "#0d1c2d",
+                        "surface-bright": "#2c3a4c",
+                        "primary-container": "#d4af37",
+                        "primary": "#f2ca50",
+                        "surface-container-high": "#1c2b3c",
+                        "on-primary": "#3c2f00",
+                        "on-primary-fixed": "#241a00",
+                        "primary-fixed": "#ffe088",
+                        "on-surface": "#d4e4fa",
+                        "background": "#051424",
+                        "secondary-container": "#03c6b2",
+                        "on-tertiary-fixed": "#2c0051",
+                        "tertiary-fixed-dim": "#ddb7ff",
+                        "primary-fixed-dim": "#e9c349",
+                        "inverse-on-surface": "#233143",
+                        "secondary-fixed": "#62fae3",
+                        "on-primary-container": "#554300",
+                        "tertiary-container": "#d09eff",
+                        "on-tertiary-container": "#6700b0",
+                        "secondary-fixed-dim": "#3cddc7",
+                        "outline-variant": "#4d4635",
+                        "surface-dim": "#051424",
+                        "surface": "#051424",
+                        "on-secondary-fixed-variant": "#005047",
+                        "on-error": "#690005",
+                        "surface-variant": "#273647",
+                        "on-secondary": "#003731",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#44e2cd",
+                        "on-tertiary": "#490080",
+                        "surface-tint": "#e9c349",
+                        "surface-container-lowest": "#010f1f",
+                        "surface-container-highest": "#273647",
+                        "tertiary-fixed": "#f0dbff",
+                        "inverse-surface": "#d4e4fa",
+                        "on-background": "#d4e4fa",
+                        "tertiary": "#e3c2ff",
+                        "inverse-primary": "#735c00"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "stack-lg": "32px",
+                        "unit": "4px",
+                        "container-margin": "24px"
+                    },
+                    fontFamily: {
+                        "display-hero": ["Space Grotesk"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Space Grotesk"],
+                        "body-md": ["Geist"],
+                        "headline-lg-mobile": ["Space Grotesk"]
+                    },
+                    fontSize: {
+                        "display-hero": ["48px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-mono": ["12px", { lineHeight: "1.4", fontWeight: "500" }],
+                        "headline-lg": ["32px", { lineHeight: "1.2", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "1.2", fontWeight: "600" }]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .shimmer-bg {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .neon-border-hover:hover {
+            border-color: #f2ca50;
+            box-shadow: 0 0 15px rgba(242, 202, 80, 0.5);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(242, 202, 80, 0.5);
+        }
+        .corner-accent {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-color: #f2ca50;
+        }
+        .corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+        .corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+        .corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+        .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md">
+<!-- Top AppBar (Web) -->
+<header class="hidden md:flex justify-between items-center px-container-margin py-4 w-full bg-background dark:bg-background border-b border-outline-variant docked full-width top-0 z-40">
+<div class="font-display-hero text-display-hero text-primary drop-shadow-[0_0_10px_rgba(242,202,80,0.5)]">Questify</div>
+<nav class="flex gap-gutter">
+<a class="text-on-surface-variant hover:bg-surface-variant transition-colors px-4 py-2 rounded-DEFAULT font-label-mono text-label-mono" href="#">Home</a>
+<a class="text-primary font-bold px-4 py-2 rounded-DEFAULT font-label-mono text-label-mono bg-surface-variant/50 border-b-2 border-primary" href="#">Quests</a>
+<a class="text-on-surface-variant hover:bg-surface-variant transition-colors px-4 py-2 rounded-DEFAULT font-label-mono text-label-mono" href="#">Rewards</a>
+<a class="text-on-surface-variant hover:bg-surface-variant transition-colors px-4 py-2 rounded-DEFAULT font-label-mono text-label-mono" href="#">Stats</a>
+<a class="text-on-surface-variant hover:bg-surface-variant transition-colors px-4 py-2 rounded-DEFAULT font-label-mono text-label-mono" href="#">Config</a>
+</nav>
+<div class="flex gap-stack-sm">
+<button class="p-2 text-primary hover:bg-surface-variant transition-colors rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-primary hover:bg-surface-variant transition-colors rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">mail</span>
+</button>
+</div>
+</header>
+<!-- Top AppBar (Mobile) -->
+<header class="md:hidden flex justify-between items-center px-container-margin py-4 w-full bg-background border-b border-outline-variant z-40 relative">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary drop-shadow-[0_0_10px_rgba(242,202,80,0.5)] tracking-tight">Questify</div>
+<div class="flex gap-stack-sm">
+<button class="text-primary"><span class="material-symbols-outlined">notifications</span></button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-[1440px] mx-auto px-container-margin py-stack-lg pb-32 md:pb-stack-lg flex gap-gutter">
+<!-- Side Navigation (Web) -->
+<aside class="hidden lg:flex flex-col h-full py-6 bg-surface-container-high dark:bg-surface-container-high border-r border-outline-variant shadow-xl docked full-height left-0 w-64 rounded-xl mr-gutter sticky top-24">
+<div class="px-6 mb-8 flex flex-col items-center">
+<div class="w-20 h-20 rounded-full border-2 border-primary mb-4 p-1 relative">
+<div class="absolute -bottom-2 -right-2 bg-background border border-primary rounded-full w-8 h-8 flex items-center justify-center font-label-mono text-label-mono text-primary neon-glow">
+                        23
+                    </div>
+<img alt="Hero Portrait" class="w-full h-full rounded-full object-cover" data-alt="A stylized portrait of a mystical hero character with glowing eyes, wearing dark intricate armor with gold accents. The lighting is dramatic, high-contrast chiaroscuro, evoking a dark fantasy or cyber-fantasy aesthetic. Deep shadows contrast with vibrant magical energy emanating from the armor. The background is a murky, atmospheric dark realm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBv7xIAwyAnje_uD91p9luzWdLmhSjUTMPcM-na81C6prdbq5XcwfOuRwnw3Ss3kDWeARkaYzG5O9Q6S0py-XeL7l5-LFZdS7yT-G_elz1Wq1TfURUVoTgRr1NGUEAdO0ssYC067AR0WV4mOH2SXW86Kv6yEvNX6GWESSBG8D2Mdl0aWzcLZK4BMwzpSqCaGY2qrVt65DEvfuIr6LoaoMsZHC1O5oVfG5hGMvOFw_GTozzyJr-dBSTRM1edodSHmlWRey4Q6upmFPo"/>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary text-center">Level 23 Shadow Walker</h2>
+<p class="font-label-mono text-label-mono text-on-surface-variant mt-2">XP: 7,250 / 10,000</p>
+<button class="mt-4 w-full bg-primary text-on-primary py-2 px-4 rounded-DEFAULT font-label-mono text-label-mono uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_15px_rgba(242,202,80,0.3)]">Upgrade to Legend</button>
+</div>
+<nav class="flex flex-col gap-2 px-4">
+<a class="flex items-center gap-4 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 p-3 transition-colors translate-x-1 hover:translate-x-2 transition-transform" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-mono text-label-mono">Character</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 p-3 transition-colors translate-x-1 hover:translate-x-2 transition-transform" href="#">
+<span class="material-symbols-outlined">backpack</span>
+<span class="font-label-mono text-label-mono">Inventory</span>
+</a>
+<a class="flex items-center gap-4 bg-primary-container text-on-primary-container rounded-lg mx-2 my-1 p-3 translate-x-2 transition-transform border border-primary/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-label-mono text-label-mono font-bold">Skill Tree</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 p-3 transition-colors translate-x-1 hover:translate-x-2 transition-transform" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-mono text-label-mono">Guilds</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:bg-surface-variant rounded-lg mx-2 my-1 p-3 transition-colors translate-x-1 hover:translate-x-2 transition-transform" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-mono text-label-mono">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Workspace -->
+<section class="flex-1 w-full max-w-5xl">
+<!-- Page Header & Tabs -->
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg text-headline-lg text-on-background mb-6 tracking-tight">Active Log</h1>
+<div class="flex border-b border-outline-variant gap-8 overflow-x-auto hide-scrollbar">
+<button class="pb-3 text-on-surface-variant font-label-mono text-label-mono uppercase tracking-wider hover:text-primary transition-colors whitespace-nowrap">
+                        Tasks
+                    </button>
+<button class="pb-3 text-primary font-label-mono text-label-mono font-bold uppercase tracking-wider border-b-2 border-primary relative whitespace-nowrap">
+                        Quests
+                        <div class="absolute bottom-[-2px] left-0 w-full h-[2px] bg-primary shadow-[0_0_8px_rgba(242,202,80,0.8)]"></div>
+</button>
+<button class="pb-3 text-on-surface-variant font-label-mono text-label-mono uppercase tracking-wider hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-error">skull</span> Boss Fights
+                    </button>
+</div>
+</div>
+<!-- Content Area: Quests Tab -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<!-- Active Quest Chain -->
+<div class="glass-panel rounded-xl p-6 relative overflow-hidden group neon-border-hover transition-all duration-300 md:col-span-2 flex flex-col md:flex-row gap-6 items-start">
+<div class="corner-accent corner-tl hidden group-hover:block"></div>
+<div class="corner-accent corner-tr hidden group-hover:block"></div>
+<div class="corner-accent corner-bl hidden group-hover:block"></div>
+<div class="corner-accent corner-br hidden group-hover:block"></div>
+<div class="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-primary/10 to-transparent pointer-events-none"></div>
+<div class="flex-shrink-0 w-16 h-16 rounded-lg bg-surface-container flex items-center justify-center border border-outline/30 text-primary">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">swords</span>
+</div>
+<div class="flex-1 w-full">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="font-label-mono text-label-mono text-secondary tracking-widest uppercase mb-1 block">Epic Chain Quest</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">The Code Refactor of Doom</h3>
+</div>
+<div class="text-right">
+<span class="font-label-mono text-label-mono text-primary font-bold">+1500 XP</span>
+<div class="text-error font-label-mono text-label-mono mt-1">-500 if failed</div>
+</div>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 max-w-2xl">Modernize the legacy authentication module before the sprint ends. The elders depend on your swiftness.</p>
+<!-- Quest Steps -->
+<div class="relative">
+<div class="absolute left-3.5 top-2 bottom-2 w-[1px] bg-outline-variant"></div>
+<div class="flex items-start gap-4 mb-4 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-primary text-primary mt-1 shadow-[0_0_10px_rgba(242,202,80,0.3)]">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<h4 class="font-body-md text-on-background line-through opacity-70">Audit existing dependencies</h4>
+</div>
+</div>
+<div class="flex items-start gap-4 mb-4 relative z-10">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center border border-primary mt-1 shadow-[0_0_15px_rgba(242,202,80,0.5)]">
+<span class="font-label-mono text-label-mono font-bold">2</span>
+</div>
+<div class="w-full">
+<h4 class="font-body-md text-on-background font-bold">Implement OAuth2 flow</h4>
+<div class="mt-3 h-2 w-full bg-surface-container-highest rounded-full overflow-hidden border border-outline/20">
+<div class="h-full bg-gradient-to-r from-[#B48A1B] to-[#D4AF37] w-1/2 relative shimmer-bg"></div>
+</div>
+<div class="flex justify-between mt-1">
+<span class="font-label-mono text-[10px] text-on-surface-variant">Step 2 of 4</span>
+<span class="font-label-mono text-[10px] text-primary">50%</span>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline/30 text-outline-variant mt-1">
+<span class="font-label-mono text-label-mono">3</span>
+</div>
+<div>
+<h4 class="font-body-md text-on-surface-variant">Write integration tests</h4>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Completed Quest -->
+<div class="glass-panel rounded-xl p-6 relative overflow-hidden border-primary/50 shadow-[0_0_20px_rgba(242,202,80,0.15)] flex flex-col justify-center items-center text-center">
+<div class="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+<div class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary text-primary mb-4 shadow-[0_0_30px_rgba(242,202,80,0.4)]">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<div class="font-label-mono text-label-mono text-primary tracking-widest uppercase mb-2 shadow-primary">Quest Complete!</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background mb-4">Deploy to Production</h3>
+<div class="flex gap-4">
+<span class="px-3 py-1 bg-surface-container rounded-full border border-primary/30 font-label-mono text-label-mono text-primary">+800 XP</span>
+<span class="px-3 py-1 bg-surface-container rounded-full border border-secondary/30 font-label-mono text-label-mono text-secondary">+1 Badge</span>
+</div>
+</div>
+<!-- Standard Quest -->
+<div class="glass-panel rounded-xl p-6 relative group neon-border-hover transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container border border-outline/30 flex items-center justify-center text-tertiary-fixed-dim">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<span class="px-2 py-1 bg-surface-container rounded text-error text-[10px] font-label-mono uppercase border border-error/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">timer</span> 4h left
+                        </span>
+</div>
+<h3 class="font-body-md font-bold text-on-background mb-2">Review PRs from Guild</h3>
+<p class="text-sm text-on-surface-variant mb-4 line-clamp-2">Clear the backlog of pull requests from the junior members. Focus on security patches.</p>
+<div class="flex justify-between items-center border-t border-outline/10 pt-4 mt-auto">
+<span class="font-label-mono text-label-mono text-primary">+300 XP</span>
+<button class="text-xs font-label-mono uppercase tracking-wider text-secondary border border-secondary/50 px-3 py-1 rounded hover:bg-secondary/10 transition-colors">Start</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-4 pb-safe bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-xl rounded-t-xl border-t border-outline-variant shadow-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 scale-110 transition-transform duration-200 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-mono text-label-mono text-[10px]">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(242,202,80,0.6)] border-b-2 border-primary pb-1 scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">swords</span>
+<span class="font-label-mono text-label-mono text-[10px] font-bold">Quests</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 scale-110 transition-transform duration-200 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mb-1">workspace_premium</span>
+<span class="font-label-mono text-label-mono text-[10px]">Rewards</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 scale-110 transition-transform duration-200 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mb-1">monitoring</span>
+<span class="font-label-mono text-label-mono text-[10px]">Stats</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 scale-110 transition-transform duration-200 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined mb-1">settings</span>
+<span class="font-label-mono text-label-mono text-[10px]">Config</span>
+</a>
+</nav>
+</body></html>
