@@ -8,7 +8,7 @@ interface TodaysQuestsProps {
 /** Glass panel wrapping the interactive today's quest list */
 export default function TodaysQuests({ tasks }: TodaysQuestsProps) {
   return (
-    <section className="glass-panel rounded-xl overflow-hidden">
+    <section className="glass-panel rounded-xl">
       {/* Panel header */}
       <div className="p-4 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-high/50">
         <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">

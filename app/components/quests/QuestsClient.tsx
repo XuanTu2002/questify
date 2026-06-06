@@ -106,7 +106,7 @@ export default function QuestsClient({ tasks, quests, bossFights }: QuestsClient
       <div className="flex-1 pb-24 md:pb-0">
         {/* TASKS TAB */}
         {activeTab === 'tasks' && (
-          <div className="glass-panel rounded-xl overflow-hidden">
+          <div className="glass-panel rounded-xl">
             {localTasks.length === 0 ? (
               <div className="p-8 text-center text-on-surface-variant font-label-mono">
                 No active tasks. Forge a new quest to begin!
