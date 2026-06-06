@@ -282,6 +282,21 @@ body {
   background-color: #03c6b2;
 }
 
+/* ─── Interactive responsiveness ────────────────────────────────────────────
+   touch-action: manipulation  → kills the 300 ms tap-delay on mobile
+   -webkit-tap-highlight-color → removes the grey flash on iOS/Android tap
+   user-select: none           → prevents text highlight on rapid taps
+──────────────────────────────────────────────────────────────────────────── */
+button,
+a,
+[role="button"],
+[role="checkbox"],
+[role="switch"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
 /* Neon hover border — hover-activated glow on interactive cards */
 .neon-border-hover {
   transition: border-color 0.2s, box-shadow 0.2s;

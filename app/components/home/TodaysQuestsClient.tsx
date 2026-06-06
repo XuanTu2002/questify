@@ -71,7 +71,7 @@ export default function TodaysQuestsClient({ tasks }: TodaysQuestsClientProps) {
             <button
               id={`task-check-${task.id}`}
               aria-label={`Complete task: ${task.title}`}
-              className="w-6 h-6 rounded border border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"
+              className="w-6 h-6 rounded border border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-[border-color,transform] duration-75 active:scale-90"
               onClick={(e) => {
                 e.stopPropagation()
                 handleComplete(task.id)

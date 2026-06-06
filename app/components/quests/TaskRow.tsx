@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { completeTask } from '@/app/actions/tasks'
 import type { TaskWithCategory } from '@/lib/types'
 import { CATEGORY_COLOR_MAP, CATEGORY_BG_MAP } from '@/lib/constants'
@@ -11,25 +11,23 @@ interface TaskRowProps {
   onCompleteOpt?: (taskId: string) => void
 }
 
-/**
- * Single task row for the Tasks tab.
- * Displays checkbox, title, and GP/XP pill.
- * Calls completeTask on check and triggers optimistic UI if onCompleteOpt provided.
- */
 export default function TaskRow({ task, onCompleteOpt }: TaskRowProps) {
   const { showToast, openLevelUp } = useModals()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
+  // Local done state → row visually completes instantly on click, before server responds
+  const [isDone, setIsDone] = useState(false)
 
   const color = CATEGORY_COLOR_MAP[task.category?.color_token ?? 'outline'] ?? '#99907c'
   const bg = CATEGORY_BG_MAP[task.category?.color_token ?? 'outline'] ?? 'rgba(153,144,124,0.1)'
 
   function handleComplete() {
-    if (isPending) return
+    if (isDone) return
+
+    // Instant visual feedback — no server round-trip wait
+    setIsDone(true)
+    if (onCompleteOpt) onCompleteOpt(task.id)
 
     startTransition(async () => {
-      // Optimistic visual update in parent
-      if (onCompleteOpt) onCompleteOpt(task.id)
-
       const res = await completeTask(task.id)
 
       if (res.success && res.data) {
@@ -38,6 +36,7 @@ export default function TaskRow({ task, onCompleteOpt }: TaskRowProps) {
           openLevelUp(res.data.newLevel)
         }
       } else if (!res.success) {
+        setIsDone(false) // revert on server error
         showToast(res.error ?? 'Failed to complete task')
       }
     })
@@ -45,26 +44,38 @@ export default function TaskRow({ task, onCompleteOpt }: TaskRowProps) {
 
   return (
     <div
-      className={`p-4 flex flex-col gap-2 hover:bg-surface-variant/30 transition-all cursor-pointer group border border-transparent border-b-outline-variant/20 hover:border-outline-variant/30 ${
-        isPending ? 'opacity-50 pointer-events-none' : ''
+      className={`p-4 flex flex-col gap-2 cursor-pointer group border border-transparent border-b-outline-variant/20 transition-[background-color,opacity] duration-150 ${
+        isDone
+          ? 'opacity-40 pointer-events-none'
+          : 'hover:bg-surface-variant/30 hover:border-outline-variant/30'
       }`}
       onClick={handleComplete}
     >
       <div className="flex items-start gap-3">
-        {/* Checkbox */}
+        {/* Checkbox — shows check instantly when isDone */}
         <button
           id={`quests-task-check-${task.id}`}
           aria-label={`Complete task: ${task.title}`}
-          className="w-5 h-5 mt-0.5 rounded border-2 border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-colors"
+          className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-[border-color,background-color] duration-100 active:scale-90 ${
+            isDone
+              ? 'border-primary bg-primary/20'
+              : 'border-outline-variant group-hover:border-primary'
+          }`}
           onClick={(e) => {
             e.stopPropagation()
             handleComplete()
           }}
-        />
+        >
+          {isDone && (
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>
+              check
+            </span>
+          )}
+        </button>
 
         {/* Task Details */}
         <div className="flex-1 flex flex-col">
-          <span className="font-body-md text-body-md text-on-surface line-clamp-2">
+          <span className={`font-body-md text-body-md line-clamp-2 transition-colors duration-100 ${isDone ? 'line-through text-on-surface-variant' : 'text-on-surface'}`}>
             {task.title}
           </span>
           {task.deadline && (

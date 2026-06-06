@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { buyFreezeToken } from '@/app/actions/rewards'
 
 interface FreezeTokenShopCardProps {
@@ -9,20 +9,24 @@ interface FreezeTokenShopCardProps {
 }
 
 export default function FreezeTokenShopCard({ freezeTokens, gpBalance }: FreezeTokenShopCardProps) {
-  const [isBuying, setIsBuying] = useState(false)
-  
-  const canBuy = gpBalance >= 200 && freezeTokens < 3
-  
-  const handleBuy = async () => {
-    if (!canBuy) return
-    setIsBuying(true)
-    
-    const result = await buyFreezeToken()
-    if (!result.success) {
-      alert(result.error)
-    }
-    
-    setIsBuying(false)
+  // Local optimistic token count — updates instantly before server responds
+  const [optimisticTokens, setOptimisticTokens] = useState(freezeTokens)
+  const [isPending, startTransition] = useTransition()
+
+  const canBuy = gpBalance >= 200 && optimisticTokens < 3
+
+  const handleBuy = () => {
+    if (!canBuy || isPending) return
+
+    setOptimisticTokens((t) => Math.min(3, t + 1)) // instant visual
+
+    startTransition(async () => {
+      const result = await buyFreezeToken()
+      if (!result.success) {
+        setOptimisticTokens((t) => t - 1) // revert on server error
+        alert(result.error)
+      }
+    })
   }
 
   return (
@@ -40,9 +44,9 @@ export default function FreezeTokenShopCard({ freezeTokens, gpBalance }: FreezeT
           </div>
           <div className="flex gap-1">
             {[1, 2, 3].map((i) => (
-              <div 
+              <div
                 key={i}
-                className={`h-2 w-6 rounded-full ${i <= freezeTokens ? 'bg-primary' : 'bg-surface-container-highest'}`}
+                className={`h-2 w-6 rounded-full transition-colors duration-150 ${i <= optimisticTokens ? 'bg-primary' : 'bg-surface-container-highest'}`}
               />
             ))}
           </div>
@@ -60,17 +64,18 @@ export default function FreezeTokenShopCard({ freezeTokens, gpBalance }: FreezeT
           <span className="font-label-mono font-bold tracking-widest text-lg">200</span>
         </div>
         
-        <button 
+        <button
           onClick={handleBuy}
-          disabled={!canBuy || isBuying}
+          disabled={!canBuy || isPending}
           className={`
-            px-4 py-2 rounded-lg font-label-mono font-bold uppercase tracking-wider transition-all
-            ${canBuy 
-              ? 'bg-primary text-on-primary hover:bg-primary/90 active:scale-95' 
+            px-4 py-2 rounded-lg font-label-mono font-bold uppercase tracking-wider
+            transition-[transform,box-shadow,background-color] duration-75
+            ${canBuy
+              ? 'bg-primary text-on-primary hover:bg-primary/90 active:scale-95'
               : 'bg-surface-container text-on-surface-variant/50 cursor-not-allowed'}
           `}
         >
-          {isBuying ? 'Buying...' : (freezeTokens >= 3 ? 'Max Reached' : 'Buy')}
+          {optimisticTokens >= 3 ? 'Max Reached' : 'Buy'}
         </button>
       </div>
     </div>

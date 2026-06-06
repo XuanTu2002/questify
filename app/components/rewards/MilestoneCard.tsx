@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import type { RewardWithStatus } from '@/lib/types'
 import { claimReward } from '@/app/actions/rewards'
 import { useModals } from '@/components/modals/ModalsProvider'
@@ -11,24 +11,29 @@ interface MilestoneCardProps {
 
 export default function MilestoneCard({ reward }: MilestoneCardProps) {
   const { showToast } = useModals()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
+  // Local optimistic state — card flips to "claimed" instantly on click
+  const [optimisticClaimed, setOptimisticClaimed] = useState(false)
 
   const handleClaim = () => {
-    if (reward.state !== 'claimable' || isPending) return
+    if (reward.state !== 'claimable' || optimisticClaimed) return
+
+    setOptimisticClaimed(true) // instant visual flip
 
     startTransition(async () => {
       const res = await claimReward(reward.id)
       if (res.success) {
         showToast(`Successfully claimed: ${reward.title}`)
       } else {
+        setOptimisticClaimed(false) // revert on server error
         showToast(res.error || 'Failed to claim reward')
       }
     })
   }
 
-  // Styles based on state
-  const isClaimable = reward.state === 'claimable'
-  const isClaimed = reward.state === 'claimed'
+  // Effective state — local optimistic overrides server state
+  const isClaimable = reward.state === 'claimable' && !optimisticClaimed
+  const isClaimed = reward.state === 'claimed' || optimisticClaimed
   const isLocked = reward.state === 'locked'
 
   return (
@@ -96,14 +101,9 @@ export default function MilestoneCard({ reward }: MilestoneCardProps) {
           <div className="w-full flex justify-end">
             <button
               onClick={handleClaim}
-              disabled={isPending}
-              className="px-6 py-2 bg-primary text-on-primary font-bold text-sm rounded-lg hover:shadow-[0_0_15px_rgba(242,202,80,0.4)] transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2 bg-primary text-on-primary font-bold text-sm rounded-lg hover:shadow-[0_0_15px_rgba(242,202,80,0.4)] active:scale-95 transition-[transform,box-shadow] duration-75 flex items-center gap-2"
             >
-              {isPending ? (
-                <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-              ) : (
-                <span className="material-symbols-outlined text-sm">star</span>
-              )}
+              <span className="material-symbols-outlined text-sm">star</span>
               CLAIM
             </button>
           </div>
