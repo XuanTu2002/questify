@@ -9,12 +9,13 @@ import {
 } from 'react'
 import ForgeQuestModal from './ForgeQuestModal'
 import LevelUpOverlay from './LevelUpOverlay'
-import type { Category } from '@/lib/types'
+import type { Category, Task } from '@/lib/types'
 
 /* ─── Context shape ──────────────────────────────────────────────────────── */
 
 interface ModalsContextValue {
-  openForgeQuest: () => void
+  /** Pass a task to open in edit mode; omit to open in create mode */
+  openForgeQuest: (task?: Task) => void
   closeForgeQuest: () => void
   openLevelUp: (level: number) => void
   showToast: (message: string) => void
@@ -43,11 +44,18 @@ interface ModalsProviderProps {
  */
 export default function ModalsProvider({ children, categories }: ModalsProviderProps) {
   const [forgeOpen, setForgeOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [levelUpData, setLevelUpData] = useState<number | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const openForgeQuest = useCallback(() => setForgeOpen(true), [])
-  const closeForgeQuest = useCallback(() => setForgeOpen(false), [])
+  const openForgeQuest = useCallback((task?: Task) => {
+    setEditingTask(task)
+    setForgeOpen(true)
+  }, [])
+  const closeForgeQuest = useCallback(() => {
+    setForgeOpen(false)
+    setEditingTask(undefined)
+  }, [])
 
   const openLevelUp = useCallback((level: number) => setLevelUpData(level), [])
   const closeLevelUp = useCallback(() => setLevelUpData(null), [])
@@ -64,6 +72,7 @@ export default function ModalsProvider({ children, categories }: ModalsProviderP
         <ForgeQuestModal
           categories={categories}
           onClose={closeForgeQuest}
+          initialTask={editingTask}
         />
       )}
       {levelUpData !== null && (

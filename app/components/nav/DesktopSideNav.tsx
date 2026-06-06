@@ -118,7 +118,7 @@ export default function DesktopSideNav() {
         {/* Primary CTA — opens ForgeQuestModal */}
         <button
           id="desktop-nav-forge-quest"
-          onClick={openForgeQuest}
+          onClick={() => openForgeQuest()}
           className="w-full py-2.5 px-4 rounded-xl font-label-mono text-label-mono uppercase tracking-widest bg-primary/15 text-primary border border-primary/40 hover:bg-primary/25 hover:border-primary/70 hover:shadow-[0_0_15px_rgba(242,202,80,0.2)] transition-all flex items-center justify-center gap-2"
         >
           <span className="material-symbols-outlined text-sm">add_circle</span>

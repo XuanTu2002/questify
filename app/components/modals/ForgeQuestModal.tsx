@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
-import { createTask } from '@/app/actions/tasks'
-import type { Category } from '@/lib/types'
+import { createTask, updateTask } from '@/app/actions/tasks'
+import type { Category, Task } from '@/lib/types'
 import { CATEGORY_COLOR_MAP } from '@/lib/constants'
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -17,32 +17,39 @@ function randomQuestId(): string {
 interface ForgeQuestModalProps {
   categories: Category[]
   onClose: () => void
+  /** When provided, the modal opens in edit mode pre-filled with this task's data */
+  initialTask?: Task
 }
 
 /**
- * Bottom-sheet modal for creating a new task (quest).
- * Layout mirrors code.html lines 317-383 exactly.
- * Submissions use createTask server action via useTransition.
+ * Bottom-sheet modal for creating or editing a task (quest).
+ * In create mode (no initialTask): calls createTask.
+ * In edit mode (initialTask set): pre-fills all fields and calls updateTask.
  */
-export default function ForgeQuestModal({ categories, onClose }: ForgeQuestModalProps) {
+export default function ForgeQuestModal({ categories, onClose, initialTask }: ForgeQuestModalProps) {
   const [isPending, startTransition] = useTransition()
+  const isEditMode = !!initialTask
 
-  /* ── Form state ── */
-  const [title, setTitle] = useState('')
+  /* ── Form state — seeded from initialTask when editing ── */
+  const [title, setTitle] = useState(initialTask?.title ?? '')
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    categories[0]?.id ?? null
+    initialTask?.category_id ?? categories[0]?.id ?? null
   )
-  const [gpValue, setGpValue] = useState(50)
-  const [xpValue, setXpValue] = useState(50)
-  const [isBossFight, setIsBossFight] = useState(false)
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [recurrenceType, setRecurrenceType] = useState<'daily' | 'weekly'>('daily')
-  const [deadline, setDeadline] = useState('')
+  const [gpValue, setGpValue] = useState(initialTask?.gp_value ?? 50)
+  const [xpValue, setXpValue] = useState(initialTask?.xp_value ?? 50)
+  const [isBossFight, setIsBossFight] = useState(initialTask?.is_boss_fight ?? false)
+  const [isRecurring, setIsRecurring] = useState(initialTask?.is_recurring ?? false)
+  const [recurrenceType, setRecurrenceType] = useState<'daily' | 'weekly'>(
+    initialTask?.recurrence ?? 'daily'
+  )
+  const [deadline, setDeadline] = useState(
+    initialTask?.deadline ? initialTask.deadline.slice(0, 10) : ''
+  )
   /** Tracks which field was last manually edited so mirroring works correctly */
-  const [gpManual, setGpManual] = useState(false)
-  const [xpManual, setXpManual] = useState(false)
+  const [gpManual, setGpManual] = useState(isEditMode)
+  const [xpManual, setXpManual] = useState(isEditMode)
   const [error, setError] = useState<string | null>(null)
-  const [questId] = useState(() => randomQuestId())
+  const [questId] = useState(() => initialTask?.id.slice(-6).toUpperCase() ?? randomQuestId())
   const inputRef = useRef<HTMLInputElement>(null)
 
   /* ── Auto-focus title on open ── */
@@ -83,22 +90,26 @@ export default function ForgeQuestModal({ categories, onClose }: ForgeQuestModal
       return
     }
 
+    const payload = {
+      title: title.trim(),
+      category_id: selectedCategoryId,
+      gp_value: gpValue,
+      xp_value: xpValue,
+      is_boss_fight: isBossFight,
+      is_recurring: isRecurring,
+      recurrence: isRecurring ? recurrenceType : null,
+      deadline: deadline || null,
+    }
+
     startTransition(async () => {
-      const result = await createTask({
-        title: title.trim(),
-        category_id: selectedCategoryId,
-        gp_value: gpValue,
-        xp_value: xpValue,
-        is_boss_fight: isBossFight,
-        is_recurring: isRecurring,
-        recurrence: isRecurring ? recurrenceType : null,
-        deadline: deadline || null,
-      })
+      const result = isEditMode && initialTask
+        ? await updateTask(initialTask.id, payload)
+        : await createTask(payload)
 
       if (result.success) {
         onClose()
       } else {
-        setError(result.error ?? 'Failed to create quest.')
+        setError(result.error ?? (isEditMode ? 'Failed to update quest.' : 'Failed to create quest.'))
       }
     })
   }
@@ -135,7 +146,7 @@ export default function ForgeQuestModal({ categories, onClose }: ForgeQuestModal
                 id="forge-quest-title"
                 className="font-headline-lg-mobile sm:font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-background font-bold tracking-tight"
               >
-                Forge New Quest
+                {isEditMode ? 'Edit Quest' : 'Forge New Quest'}
               </h2>
               <p className="font-label-mono text-label-mono text-on-surface-variant mt-1">
                 ID: #QST-{questId}
@@ -363,9 +374,9 @@ export default function ForgeQuestModal({ categories, onClose }: ForgeQuestModal
                 ) : (
                   <>
                     <span className="material-symbols-outlined group-hover:rotate-90 transition-transform">
-                      add
+                      {isEditMode ? 'save' : 'add'}
                     </span>
-                    ADD QUEST
+                    {isEditMode ? 'SAVE CHANGES' : 'ADD QUEST'}
                   </>
                 )}
               </button>

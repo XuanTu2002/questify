@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TaskRow from './TaskRow'
 import EpicQuestCard from './EpicQuestCard'
 import BossFightCard from './BossFightCard'
@@ -30,11 +30,18 @@ export default function QuestsClient({ tasks, quests, bossFights }: QuestsClient
   // Modals for Boss Fights completion
   const { showToast, openLevelUp } = useModals()
 
-  // Local optimistic lists
+  // Local optimistic lists — synced from server props when revalidation brings fresh data
   const [localTasks, setLocalTasks] = useState(tasks)
   const [localBosses, setLocalBosses] = useState(bossFights)
 
+  useEffect(() => { setLocalTasks(tasks) }, [tasks])
+  useEffect(() => { setLocalBosses(bossFights) }, [bossFights])
+
   function handleTaskCompleteOpt(taskId: string) {
+    setLocalTasks(prev => prev.filter(t => t.id !== taskId))
+  }
+
+  function handleTaskDeleteOpt(taskId: string) {
     setLocalTasks(prev => prev.filter(t => t.id !== taskId))
   }
 
@@ -107,7 +114,7 @@ export default function QuestsClient({ tasks, quests, bossFights }: QuestsClient
             ) : (
               <div className="flex flex-col">
                 {localTasks.map(task => (
-                  <TaskRow key={task.id} task={task} onCompleteOpt={handleTaskCompleteOpt} />
+                  <TaskRow key={task.id} task={task} onCompleteOpt={handleTaskCompleteOpt} onDeleteOpt={handleTaskDeleteOpt} />
                 ))}
               </div>
             )}

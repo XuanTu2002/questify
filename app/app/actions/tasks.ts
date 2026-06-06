@@ -235,6 +235,46 @@ export async function createTask(formData: {
   return { success: true, data: { id: data.id } }
 }
 
+/** Updates an existing task's editable fields (no XP/GP awarded — just metadata) */
+export async function updateTask(
+  taskId: string,
+  formData: {
+    title: string
+    category_id: string | null
+    gp_value: number
+    xp_value: number
+    is_boss_fight: boolean
+    is_recurring: boolean
+    recurrence: 'daily' | 'weekly' | null
+    deadline: string | null
+  }
+): Promise<ActionResult<{ id: string }>> {
+  const { error } = await supabase
+    .from('tasks')
+    .update({
+      title: formData.title,
+      category_id: formData.category_id,
+      gp_value: formData.gp_value,
+      xp_value: formData.xp_value,
+      is_boss_fight: formData.is_boss_fight,
+      is_recurring: formData.is_recurring,
+      recurrence: formData.recurrence,
+      deadline: formData.deadline,
+    })
+    .eq('id', taskId)
+    .eq('user_id', USER_ID)
+    .eq('status', 'active')
+
+  if (error) {
+    return { success: false, error: 'Failed to update task.' }
+  }
+
+  revalidatePath('/')
+  revalidatePath('/quests')
+
+  return { success: true, data: { id: taskId } }
+}
+
 /** Archives (soft-deletes) a task by setting status to archived */
 export async function deleteTask(taskId: string): Promise<ActionResult> {
   const { error } = await supabase
