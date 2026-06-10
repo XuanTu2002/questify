@@ -93,7 +93,7 @@ function HomeTaskRow({ task, isLast, onComplete, onRemove }: HomeTaskRowProps) {
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 top-7 z-30 w-40 bg-surface-container-high border border-outline-variant/40 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="absolute right-0 top-8 z-50 w-44 bg-surface-container-high border border-outline-variant/40 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.6)] overflow-hidden">
             {!confirmingDelete ? (
               <>
                 <button
@@ -182,7 +182,7 @@ export default function TodaysQuestsClient({ tasks }: TodaysQuestsClientProps) {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col overflow-visible">
       {optimisticTasks.map((task, idx) => (
         <HomeTaskRow
           key={task.id}
