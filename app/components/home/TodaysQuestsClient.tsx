@@ -53,18 +53,18 @@ function HomeTaskRow({ task, isLast, onComplete, onRemove }: HomeTaskRowProps) {
         !isLast ? 'border-b border-outline-variant/20' : ''
       }`}
     >
-      {/* Checkbox */}
+      {/* Checkbox — fires on pointer-down for instant feedback */}
       <button
         id={`task-check-${task.id}`}
         aria-label={`Complete task: ${task.title}`}
-        className="w-6 h-6 rounded border border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-[border-color,transform] duration-75 active:scale-90"
-        onClick={onComplete}
+        className="w-6 h-6 rounded border border-outline-variant flex items-center justify-center shrink-0 group-hover:border-primary transition-[border-color,background-color,transform] duration-75 active:scale-75 active:bg-primary/20"
+        onPointerDown={onComplete}
       />
 
-      {/* Task title — clicking it completes */}
+      {/* Task title */}
       <span
-        className="flex-1 font-body-md text-body-md text-on-surface cursor-pointer"
-        onClick={onComplete}
+        className="flex-1 font-body-md text-body-md text-on-surface cursor-pointer select-none"
+        onPointerDown={onComplete}
       >
         {task.title}
       </span>

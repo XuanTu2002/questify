@@ -81,16 +81,16 @@ export default function TaskRow({ task, onCompleteOpt, onDeleteOpt }: TaskRowPro
       }`}
     >
       <div className="flex items-start gap-3">
-        {/* Checkbox — clicking it completes the task */}
+        {/* Checkbox — pointer-down for instant visual + optimistic response */}
         <button
           id={`quests-task-check-${task.id}`}
           aria-label={`Complete task: ${task.title}`}
-          className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-[border-color,background-color] duration-100 active:scale-90 cursor-pointer ${
+          className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-[border-color,background-color,transform] duration-50 active:scale-75 cursor-pointer ${
             isDone
               ? 'border-primary bg-primary/20'
               : 'border-outline-variant hover:border-primary'
           }`}
-          onClick={handleComplete}
+          onPointerDown={handleComplete}
         >
           {isDone && (
             <span className="material-symbols-outlined text-primary" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>
@@ -99,8 +99,8 @@ export default function TaskRow({ task, onCompleteOpt, onDeleteOpt }: TaskRowPro
           )}
         </button>
 
-        {/* Task Details — clicking title area completes the task */}
-        <div className="flex-1 flex flex-col cursor-pointer" onClick={handleComplete}>
+        {/* Task Details — pointer-down fires instant optimistic update */}
+        <div className="flex-1 flex flex-col cursor-pointer select-none" onPointerDown={handleComplete}>
           <span className={`font-body-md text-body-md line-clamp-2 transition-colors duration-100 ${isDone ? 'line-through text-on-surface-variant' : 'text-on-surface'}`}>
             {task.title}
           </span>
