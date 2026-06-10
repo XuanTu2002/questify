@@ -159,7 +159,8 @@ export default function TodaysQuestsClient({ tasks }: TodaysQuestsClientProps) {
       removeTask(taskId)
       const res = await completeTask(taskId)
       if (res.success && res.data) {
-        showToast(`+${res.data.gpAwarded} GP earned, +${res.data.xpAwarded} XP gained`)
+        const bonusLabel = res.data.multiplier > 1 ? ` · ${res.data.multiplier.toFixed(2)}x streak bonus` : ''
+        showToast(`+${res.data.gpAwarded} GP, +${res.data.xpAwarded} XP${bonusLabel}`)
         if (res.data.leveledUp) openLevelUp(res.data.newLevel)
       }
     })

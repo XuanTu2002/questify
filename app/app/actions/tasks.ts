@@ -10,7 +10,7 @@ import type { ActionResult, Task, UserStats } from '@/lib/types'
 /** Completes a task — awards GP/XP, updates streak, logs daily record */
 export async function completeTask(
   taskId: string
-): Promise<ActionResult<{ gpAwarded: number; xpAwarded: number; leveledUp: boolean; newLevel: number }>> {
+): Promise<ActionResult<{ gpAwarded: number; xpAwarded: number; leveledUp: boolean; newLevel: number; multiplier: number }>> {
   // 0. Run daily check to ensure state (penalties, gaps) is perfectly up to date
   await applyDailyCheck()
 
@@ -189,7 +189,7 @@ export async function completeTask(
 
   return {
     success: true,
-    data: { gpAwarded: totalGP, xpAwarded, leveledUp, newLevel },
+    data: { gpAwarded: totalGP, xpAwarded, leveledUp, newLevel, multiplier },
     leveledUp,
     newLevel,
   }
