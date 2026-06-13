@@ -90,3 +90,37 @@ export async function deleteReward(rewardId: string): Promise<ActionResult> {
   revalidatePath('/rewards')
   return { success: true }
 }
+
+export async function updateReward(
+  rewardId: string,
+  data: { title: string; description?: string; gp_cost: number; required_level?: number }
+): Promise<ActionResult> {
+  // Block edits on claimed milestones
+  const { data: claim } = await supabase
+    .from('reward_claims')
+    .select('id')
+    .eq('user_id', USER_ID)
+    .eq('reward_id', rewardId)
+    .single()
+
+  if (claim) {
+    return { success: false, error: 'Cannot edit a claimed milestone.' }
+  }
+
+  const { error } = await supabase
+    .from('rewards')
+    .update({
+      title: data.title,
+      description: data.description || null,
+      gp_cost: data.gp_cost,
+      required_level: data.required_level || 1,
+    })
+    .eq('id', rewardId)
+    .eq('user_id', USER_ID)
+
+  if (error) return { success: false, error: 'Failed to update milestone.' }
+
+  revalidatePath('/config')
+  revalidatePath('/rewards')
+  return { success: true }
+}

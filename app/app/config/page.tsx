@@ -19,6 +19,14 @@ async function getConfigData() {
     .eq('user_id', USER_ID)
     .order('sort_order', { ascending: true })
 
+  // Fetch which rewards have been claimed (to lock editing on those)
+  const { data: claims } = await supabase
+    .from('reward_claims')
+    .select('reward_id')
+    .eq('user_id', USER_ID)
+
+  const claimedIds = new Set((claims || []).map((c: { reward_id: string }) => c.reward_id))
+
   let { data: config } = await supabase
     .from('config')
     .select('*')
@@ -43,12 +51,13 @@ async function getConfigData() {
   return {
     categories: (categories as Category[]) || [],
     rewards: (rewards as Reward[]) || [],
+    claimedIds,
     config
   }
 }
 
 export default async function ConfigPage() {
-  const { categories, rewards, config } = await getConfigData()
+  const { categories, rewards, claimedIds, config } = await getConfigData()
 
   return (
     <main
@@ -65,7 +74,7 @@ export default async function ConfigPage() {
       <div className="space-y-6">
         <CategoryList categories={categories} />
         
-        <MilestoneEditor rewards={rewards} />
+        <MilestoneEditor rewards={rewards} claimedIds={claimedIds} />
         
         <ConfigPanels config={config} />
       </div>
