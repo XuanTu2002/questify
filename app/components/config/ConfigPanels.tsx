@@ -18,8 +18,10 @@ export default function ConfigPanels({ config }: ConfigPanelsProps) {
   const [latePenalty, setLatePenalty] = useState(config.penalize_overdue_deadline)
   const [hardcoreMode, setHardcoreMode] = useState(false)
   
-  // Local state for slider
+  // Local state for sliders
   const [streakBase, setStreakBase] = useState(config.min_daily_gp_for_streak)
+  const [defaultGpValue, setDefaultGpValue] = useState(config.default_gp_value ?? 50)
+  const [defaultGpStep, setDefaultGpStep] = useState(config.default_gp_step ?? 50)
   const [sliderTimeout, setSliderTimeout] = useState<NodeJS.Timeout | null>(null)
 
   function handleToggleChange(field: 'penalize_missed_recurring' | 'penalize_overdue_deadline', val: boolean) {
@@ -39,15 +41,17 @@ export default function ConfigPanels({ config }: ConfigPanelsProps) {
     })
   }
 
-  function handleSliderChange(val: number) {
-    setStreakBase(val)
-    
+  function handleSliderChange(field: 'min_daily_gp_for_streak' | 'default_gp_value' | 'default_gp_step', val: number) {
+    if (field === 'min_daily_gp_for_streak') setStreakBase(val)
+    if (field === 'default_gp_value') setDefaultGpValue(val)
+    if (field === 'default_gp_step') setDefaultGpStep(val)
+
     // Debounce the save
     if (sliderTimeout) clearTimeout(sliderTimeout)
     const timeout = setTimeout(() => {
       startTransition(async () => {
-        const res = await updateConfig({ min_daily_gp_for_streak: val })
-        if (res.success) showToast('Streak base saved')
+        const res = await updateConfig({ [field]: val })
+        if (res.success) showToast('Settings saved')
       })
     }, 1000)
     setSliderTimeout(timeout)
@@ -131,25 +135,63 @@ export default function ConfigPanels({ config }: ConfigPanelsProps) {
           </h3>
         </div>
 
-        <div className="relative z-10">
-          <div className="flex justify-between items-end mb-2">
-            <span className="font-body-md text-on-surface">Base Streak Points</span>
-            <span className="font-label-mono text-tertiary font-bold text-lg">{streakBase} GP</span>
+        <div className="relative z-10 space-y-6">
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <span className="font-body-md text-on-surface">Base Streak Points</span>
+              <span className="font-label-mono text-tertiary font-bold text-lg">{streakBase} GP</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              step="10"
+              value={streakBase}
+              onChange={e => handleSliderChange('min_daily_gp_for_streak', Number(e.target.value))}
+              className="w-full h-2 bg-surface-dim rounded-lg appearance-none cursor-pointer accent-tertiary"
+            />
+            <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+              Sets the minimum GP needed daily to maintain streak. Multiplier increases by 1.1x every 7 consecutive days of logging.
+            </p>
           </div>
-          
-          <input 
-            type="range" 
-            min="10" 
-            max="100" 
-            step="10"
-            value={streakBase}
-            onChange={e => handleSliderChange(Number(e.target.value))}
-            className="w-full h-2 bg-surface-dim rounded-lg appearance-none cursor-pointer accent-tertiary"
-          />
-          
-          <p className="text-xs text-on-surface-variant mt-4 leading-relaxed">
-            Sets the minimum GP needed daily to maintain streak. Multiplier increases by 1.1x every 7 consecutive days of logging.
-          </p>
+
+          <div className="border-t border-white/10 pt-5">
+            <div className="flex justify-between items-end mb-2">
+              <span className="font-body-md text-on-surface">Default GP Value</span>
+              <span className="font-label-mono text-primary font-bold text-lg">{defaultGpValue} GP</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="500"
+              step="10"
+              value={defaultGpValue}
+              onChange={e => handleSliderChange('default_gp_value', Number(e.target.value))}
+              className="w-full h-2 bg-surface-dim rounded-lg appearance-none cursor-pointer accent-primary"
+            />
+            <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+              Starting GP value when Forge Quest modal opens for a new task.
+            </p>
+          </div>
+
+          <div className="border-t border-white/10 pt-5">
+            <div className="flex justify-between items-end mb-2">
+              <span className="font-body-md text-on-surface">GP Spinner Step</span>
+              <span className="font-label-mono text-primary font-bold text-lg">+{defaultGpStep} GP</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              step="10"
+              value={defaultGpStep}
+              onChange={e => handleSliderChange('default_gp_step', Number(e.target.value))}
+              className="w-full h-2 bg-surface-dim rounded-lg appearance-none cursor-pointer accent-primary"
+            />
+            <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+              How much each arrow click increments/decrements GP in Forge Quest modal.
+            </p>
+          </div>
         </div>
       </section>
     </div>

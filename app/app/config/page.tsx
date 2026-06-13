@@ -45,6 +45,8 @@ async function getConfigData() {
       recurring_penalty_pct: 50,
       deadline_late_penalty_pct: 25,
       deadline_very_late_penalty_pct: 50,
+      default_gp_value: 50,
+      default_gp_step: 50,
     }
   }
 
@@ -76,7 +78,7 @@ export default async function ConfigPage() {
         
         <MilestoneEditor rewards={rewards} claimedIds={claimedIds} />
         
-        <ConfigPanels config={config} />
+        <ConfigPanels config={config!} />
       </div>
     </main>
   )

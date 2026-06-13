@@ -36,13 +36,17 @@ interface ModalsProviderProps {
   children: ReactNode
   /** Pre-fetched categories — passed from a server component in layout */
   categories: Category[]
+  /** Default GP value when opening Forge Quest (from config) */
+  defaultGpValue: number
+  /** GP increment step for the spinner arrows (from config) */
+  defaultGpStep: number
 }
 
 /**
  * Root-level modal provider — wraps the entire app so any page or component
  * can call openForgeQuest() without prop-drilling.
  */
-export default function ModalsProvider({ children, categories }: ModalsProviderProps) {
+export default function ModalsProvider({ children, categories, defaultGpValue, defaultGpStep }: ModalsProviderProps) {
   const [forgeOpen, setForgeOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [levelUpData, setLevelUpData] = useState<number | null>(null)
@@ -73,6 +77,8 @@ export default function ModalsProvider({ children, categories }: ModalsProviderP
           categories={categories}
           onClose={closeForgeQuest}
           initialTask={editingTask}
+          defaultGpValue={defaultGpValue}
+          defaultGpStep={defaultGpStep}
         />
       )}
       {levelUpData !== null && (

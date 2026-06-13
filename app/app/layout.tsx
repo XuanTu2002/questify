@@ -38,14 +38,17 @@ export const metadata: Metadata = {
   keywords: ['productivity', 'gamification', 'RPG', 'tasks', 'quests'],
 }
 
-/** Fetches all categories for the current user — used by ForgeQuestModal */
-async function getCategories(): Promise<Category[]> {
-  const { data } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('user_id', USER_ID)
-    .order('sort_order', { ascending: true })
-  return (data as Category[]) ?? []
+/** Fetches categories and forge-quest config defaults */
+async function getLayoutData() {
+  const [{ data: cats }, { data: cfg }] = await Promise.all([
+    supabase.from('categories').select('*').eq('user_id', USER_ID).order('sort_order', { ascending: true }),
+    supabase.from('config').select('default_gp_value, default_gp_step').eq('user_id', USER_ID).single(),
+  ])
+  return {
+    categories: (cats as Category[]) ?? [],
+    defaultGpValue: (cfg as any)?.default_gp_value ?? 50,
+    defaultGpStep: (cfg as any)?.default_gp_step ?? 50,
+  }
 }
 
 export default async function RootLayout({
@@ -53,7 +56,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const categories = await getCategories()
+  const { categories, defaultGpValue, defaultGpStep } = await getLayoutData()
 
   return (
     <html
@@ -76,7 +79,7 @@ export default async function RootLayout({
       <body className="min-h-full bg-background text-on-background antialiased flex flex-col md:flex-row">
         <DailyCheckTrigger />
         {/* ModalsProvider — wraps full app so any component can openForgeQuest() */}
-        <ModalsProvider categories={categories}>
+        <ModalsProvider categories={categories} defaultGpValue={defaultGpValue} defaultGpStep={defaultGpStep}>
           {/* Desktop side nav — hidden on mobile */}
           <DesktopSideNav />
 

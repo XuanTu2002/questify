@@ -113,6 +113,10 @@ export interface Config {
   recurring_penalty_pct: number
   deadline_late_penalty_pct: number
   deadline_very_late_penalty_pct: number
+  /** Default GP value when opening Forge Quest modal (default: 50) */
+  default_gp_value: number
+  /** Step size for GP spinner arrows in Forge Quest modal (default: 50) */
+  default_gp_step: number
 }
 
 /* ─── Derived / composite types used in UI ──────────────────────────────── */

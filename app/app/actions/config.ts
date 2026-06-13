@@ -10,6 +10,8 @@ export async function updateConfig(
   updates: Partial<{
     penalize_missed_recurring: boolean
     min_daily_gp_for_streak: number
+    default_gp_value: number
+    default_gp_step: number
   }>
 ): Promise<ActionResult> {
   const { error } = await supabase

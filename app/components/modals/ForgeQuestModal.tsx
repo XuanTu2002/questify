@@ -19,6 +19,10 @@ interface ForgeQuestModalProps {
   onClose: () => void
   /** When provided, the modal opens in edit mode pre-filled with this task's data */
   initialTask?: Task
+  /** Default GP value for new tasks (from config, default 50) */
+  defaultGpValue?: number
+  /** GP spinner step size (from config, default 50) */
+  defaultGpStep?: number
 }
 
 /**
@@ -26,7 +30,7 @@ interface ForgeQuestModalProps {
  * In create mode (no initialTask): calls createTask.
  * In edit mode (initialTask set): pre-fills all fields and calls updateTask.
  */
-export default function ForgeQuestModal({ categories, onClose, initialTask }: ForgeQuestModalProps) {
+export default function ForgeQuestModal({ categories, onClose, initialTask, defaultGpValue = 50, defaultGpStep = 50 }: ForgeQuestModalProps) {
   const [isPending, startTransition] = useTransition()
   const isEditMode = !!initialTask
 
@@ -35,8 +39,8 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     initialTask?.category_id ?? categories[0]?.id ?? null
   )
-  const [gpValue, setGpValue] = useState(initialTask?.gp_value ?? 50)
-  const [xpValue, setXpValue] = useState(initialTask?.xp_value ?? 50)
+  const [gpValue, setGpValue] = useState(initialTask?.gp_value ?? defaultGpValue)
+  // XP is always locked to GP — not user-editable
   const [isBossFight, setIsBossFight] = useState(initialTask?.is_boss_fight ?? false)
   const [isRecurring, setIsRecurring] = useState(initialTask?.is_recurring ?? false)
   const [recurrenceType, setRecurrenceType] = useState<'daily' | 'weekly'>(
@@ -45,9 +49,6 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
   const [deadline, setDeadline] = useState(
     initialTask?.deadline ? initialTask.deadline.slice(0, 10) : ''
   )
-  /** Tracks which field was last manually edited so mirroring works correctly */
-  const [gpManual, setGpManual] = useState(isEditMode)
-  const [xpManual, setXpManual] = useState(isEditMode)
   const [error, setError] = useState<string | null>(null)
   const [questId] = useState(() => initialTask?.id.slice(-6).toUpperCase() ?? randomQuestId())
   const inputRef = useRef<HTMLInputElement>(null)
@@ -66,18 +67,10 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  /* ── GP / XP mirroring: values stay equal until user edits one ── */
+  /* ── GP change handler ── */
   const handleGpChange = useCallback((v: number) => {
-    setGpValue(v)
-    setGpManual(true)
-    if (!xpManual) setXpValue(v)
-  }, [xpManual])
-
-  const handleXpChange = useCallback((v: number) => {
-    setXpValue(v)
-    setXpManual(true)
-    if (!gpManual) setGpValue(v)
-  }, [gpManual])
+    setGpValue(Math.max(1, v))
+  }, [])
 
   /* ── Submit ── */
   function handleSubmit(e: React.FormEvent) {
@@ -94,7 +87,7 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
       title: title.trim(),
       category_id: selectedCategoryId,
       gp_value: gpValue,
-      xp_value: xpValue,
+      xp_value: gpValue, // XP always equals GP
       is_boss_fight: isBossFight,
       is_recurring: isRecurring,
       recurrence: isRecurring ? recurrenceType : null,
@@ -211,9 +204,8 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
               </div>
             </div>
 
-            {/* ── GP + XP inputs side by side ── */}
+            {/* ── GP input with step spinner ── */}
             <div className="flex gap-4">
-              {/* GP / Points Yield */}
               <div className="flex-1 bg-surface-dim rounded-lg p-3 border border-white/5 focus-within:border-primary/50 transition-colors relative">
                 <label
                   htmlFor="forge-gp-input"
@@ -221,36 +213,49 @@ export default function ForgeQuestModal({ categories, onClose, initialTask }: Fo
                 >
                   Points Yield
                 </label>
-                <input
-                  id="forge-gp-input"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  value={gpValue}
-                  onChange={(e) => handleGpChange(Math.max(1, Number(e.target.value)))}
-                  disabled={isPending}
-                  className="w-full bg-transparent border-none text-right text-lg text-primary font-bold mt-4 focus:ring-0 p-0 focus:outline-none"
-                />
+                <div className="flex items-center justify-end mt-4 gap-1">
+                  <button
+                    type="button"
+                    onPointerDown={() => handleGpChange(gpValue - defaultGpStep)}
+                    disabled={isPending || gpValue <= defaultGpStep}
+                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
+                    aria-label={`Decrease by ${defaultGpStep}`}
+                  >
+                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_down</span>
+                  </button>
+                  <input
+                    id="forge-gp-input"
+                    type="number"
+                    min={1}
+                    max={9999}
+                    step={defaultGpStep}
+                    value={gpValue}
+                    onChange={(e) => handleGpChange(Math.max(1, Number(e.target.value)))}
+                    disabled={isPending}
+                    className="w-20 bg-transparent border-none text-right text-lg text-primary font-bold focus:ring-0 p-0 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onPointerDown={() => handleGpChange(gpValue + defaultGpStep)}
+                    disabled={isPending || gpValue >= 9999}
+                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
+                    aria-label={`Increase by ${defaultGpStep}`}
+                  >
+                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_up</span>
+                  </button>
+                </div>
               </div>
 
-              {/* XP Reward */}
-              <div className="flex-1 bg-surface-dim rounded-lg p-3 border border-white/5 focus-within:border-tertiary/50 transition-colors relative">
+              {/* XP Reward — read-only, always mirrors GP */}
+              <div className="flex-1 bg-surface-dim rounded-lg p-3 border border-white/5 opacity-60 relative">
                 <label
-                  htmlFor="forge-xp-input"
                   className="block text-[10px] font-label-mono text-label-mono text-on-surface-variant uppercase absolute top-2 left-3"
                 >
                   XP Reward
                 </label>
-                <input
-                  id="forge-xp-input"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  value={xpValue}
-                  onChange={(e) => handleXpChange(Math.max(1, Number(e.target.value)))}
-                  disabled={isPending}
-                  className="w-full bg-transparent border-none text-right text-lg text-tertiary-fixed-dim font-bold mt-4 focus:ring-0 p-0 focus:outline-none"
-                />
+                <div className="w-full text-right text-lg text-tertiary-fixed-dim font-bold mt-4 pr-1 select-none">
+                  {gpValue}
+                </div>
               </div>
             </div>
 
