@@ -113,9 +113,10 @@ async function getRewardsData(page: number) {
 export default async function RewardsPage({
   searchParams,
 }: {
-  searchParams: { page?: string }
+  searchParams: Promise<{ page?: string }>
 }) {
-  const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1)
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
   const { stats, heroClass, rewards, ledger, totalPages, totalEntries } = await getRewardsData(page)
 
   return (
