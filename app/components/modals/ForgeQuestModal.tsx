@@ -204,7 +204,7 @@ export default function ForgeQuestModal({ categories, onClose, initialTask, defa
               </div>
             </div>
 
-            {/* ── GP input with step spinner ── */}
+            {/* ── GP + XP inputs side by side ── */}
             <div className="flex gap-4">
               <div className="flex-1 bg-surface-dim rounded-lg p-3 border border-white/5 focus-within:border-primary/50 transition-colors relative">
                 <label
@@ -213,37 +213,16 @@ export default function ForgeQuestModal({ categories, onClose, initialTask, defa
                 >
                   Points Yield
                 </label>
-                <div className="flex items-center justify-end mt-4 gap-1">
-                  <button
-                    type="button"
-                    onPointerDown={() => handleGpChange(gpValue - defaultGpStep)}
-                    disabled={isPending || gpValue <= defaultGpStep}
-                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
-                    aria-label={`Decrease by ${defaultGpStep}`}
-                  >
-                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_down</span>
-                  </button>
-                  <input
-                    id="forge-gp-input"
-                    type="number"
-                    min={1}
-                    max={9999}
-                    step={defaultGpStep}
-                    value={gpValue}
-                    onChange={(e) => handleGpChange(Math.max(1, Number(e.target.value)))}
-                    disabled={isPending}
-                    className="w-20 bg-transparent border-none text-right text-lg text-primary font-bold focus:ring-0 p-0 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onPointerDown={() => handleGpChange(gpValue + defaultGpStep)}
-                    disabled={isPending || gpValue >= 9999}
-                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
-                    aria-label={`Increase by ${defaultGpStep}`}
-                  >
-                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_up</span>
-                  </button>
-                </div>
+                <input
+                  id="forge-gp-input"
+                  type="number"
+                  min={1}
+                  max={9999}
+                  value={gpValue}
+                  onChange={(e) => handleGpChange(Math.max(1, Number(e.target.value)))}
+                  disabled={isPending}
+                  className="w-full bg-transparent border-none text-right text-lg text-primary font-bold mt-4 focus:ring-0 p-0 focus:outline-none"
+                />
               </div>
 
               {/* XP Reward — read-only, always mirrors GP */}
