@@ -213,16 +213,40 @@ export default function ForgeQuestModal({ categories, onClose, initialTask, defa
                 >
                   Points Yield
                 </label>
-                <input
-                  id="forge-gp-input"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  value={gpValue}
-                  onChange={(e) => handleGpChange(Math.max(1, Number(e.target.value)))}
-                  disabled={isPending}
-                  className="w-full bg-transparent border-none text-right text-lg text-primary font-bold mt-4 focus:ring-0 p-0 focus:outline-none"
-                />
+                <div className="flex items-center justify-end mt-4 gap-1">
+                  <button
+                    type="button"
+                    onPointerDown={() => handleGpChange(gpValue - defaultGpStep)}
+                    disabled={isPending || gpValue <= 1}
+                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
+                    aria-label={`Decrease by ${defaultGpStep}`}
+                  >
+                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_down</span>
+                  </button>
+                  {/* type=text + inputMode=numeric avoids browser native +1 spinner while allowing any number */}
+                  <input
+                    id="forge-gp-input"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={gpValue}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10)
+                      if (!isNaN(v)) handleGpChange(v)
+                    }}
+                    disabled={isPending}
+                    className="w-16 bg-transparent border-none text-right text-lg text-primary font-bold focus:ring-0 p-0 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onPointerDown={() => handleGpChange(gpValue + defaultGpStep)}
+                    disabled={isPending || gpValue >= 9999}
+                    className="text-on-surface-variant hover:text-primary transition-colors disabled:opacity-30 px-1"
+                    aria-label={`Increase by ${defaultGpStep}`}
+                  >
+                    <span className="material-symbols-outlined text-base leading-none">keyboard_arrow_up</span>
+                  </button>
+                </div>
               </div>
 
               {/* XP Reward — read-only, always mirrors GP */}
