@@ -177,7 +177,7 @@ export default async function RewardsPage({
       </section>
 
       {/* Treasury Ledger Section */}
-      <section>
+      <section id="ledger">
         <div className="flex justify-between items-end mb-6">
           <div>
             <h2 className="font-headline-lg text-2xl text-on-surface">Treasury Ledger</h2>
@@ -210,7 +210,7 @@ export default async function RewardsPage({
             <div className="p-4 bg-surface-container-low border-t border-outline-variant/20 flex items-center justify-between gap-4">
               {page > 1 ? (
                 <Link
-                  href={`/rewards?page=${page - 1}`}
+                  href={`/rewards?page=${page - 1}#ledger`}
                   className="flex items-center gap-1.5 font-label-mono text-sm text-primary uppercase tracking-wider hover:text-primary-container transition-colors"
                 >
                   <span className="material-symbols-outlined text-base leading-none">arrow_back</span>
@@ -228,7 +228,7 @@ export default async function RewardsPage({
                 {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map(p => (
                   <Link
                     key={p}
-                    href={`/rewards?page=${p}`}
+                    href={`/rewards?page=${p}#ledger`}
                     className={`rounded-full transition-all duration-200 ${
                       p === page
                         ? 'bg-primary w-4 h-2'
@@ -244,7 +244,7 @@ export default async function RewardsPage({
 
               {page < totalPages ? (
                 <Link
-                  href={`/rewards?page=${page + 1}`}
+                  href={`/rewards?page=${page + 1}#ledger`}
                   className="flex items-center gap-1.5 font-label-mono text-sm text-primary uppercase tracking-wider hover:text-primary-container transition-colors"
                 >
                   Next
