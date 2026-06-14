@@ -4,10 +4,15 @@ import TreasuryHero from '@/components/rewards/TreasuryHero'
 import MilestoneCard from '@/components/rewards/MilestoneCard'
 import LedgerRow from '@/components/rewards/LedgerRow'
 import FreezeTokenShopCard from '@/components/rewards/FreezeTokenShopCard'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-async function getRewardsData() {
+const PAGE_SIZE = 10
+
+async function getRewardsData(page: number) {
+  const offset = (page - 1) * PAGE_SIZE
+
   // 1. Fetch user stats
   const { data: stats } = await supabase
     .from('user_stats')
@@ -16,7 +21,6 @@ async function getRewardsData() {
     .single<UserStats>()
 
   const safeStats = stats ?? { gp_balance: 0, current_level: 1, total_xp: 0 } as UserStats
-  // For the hero class, we'll hardcode "Shadow Walker" or fetch from users if we had it joined
   const heroClass = 'Shadow Walker'
 
   // 2. Fetch all milestones
@@ -35,42 +39,33 @@ async function getRewardsData() {
     .order('claimed_at', { ascending: false })
 
   const typedClaims = (claims as RewardClaim[]) ?? []
-  
-  // Create quick lookup for claims
+
   const claimedRewardIds = new Set(typedClaims.map(c => c.reward_id))
   const claimMap = new Map(typedClaims.map(c => [c.reward_id, c.claimed_at]))
 
   // 4. Enrich rewards with status
   const rewardsWithStatus: RewardWithStatus[] = typedRewards.map(reward => {
     let state: RewardWithStatus['state'] = 'locked'
-    
+
     if (claimedRewardIds.has(reward.id)) {
       state = 'claimed'
     } else if (safeStats.current_level >= reward.required_level && safeStats.gp_balance >= reward.gp_cost) {
       state = 'claimable'
     }
 
-    return {
-      ...reward,
-      state,
-      claimedAt: claimMap.get(reward.id)
-    }
+    return { ...reward, state, claimedAt: claimMap.get(reward.id) }
   })
 
-  // 5. Fetch recent task completions (last 30 days) to interleave with claims for Ledger
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  // 5. Fetch ALL task completions (all-time, no date filter) for unified ledger
   const { data: taskCompletions } = await supabase
     .from('task_completions')
     .select('id, gp_awarded, completed_at, tasks(title)')
     .eq('user_id', USER_ID)
-    .gte('completed_at', thirtyDaysAgo)
     .order('completed_at', { ascending: false })
-    .limit(20)
 
-  // 6. Build the Ledger
+  // Build unified ledger
   const ledger: LedgerEntry[] = []
 
-  // Add claims to ledger
   for (const claim of typedClaims) {
     const reward = typedRewards.find(r => r.id === claim.reward_id)
     ledger.push({
@@ -83,7 +78,6 @@ async function getRewardsData() {
     })
   }
 
-  // Add earns to ledger
   if (taskCompletions) {
     for (const tc of taskCompletions) {
       const title = tc.tasks ? (tc.tasks as any).title : 'Completed Task'
@@ -98,30 +92,41 @@ async function getRewardsData() {
     }
   }
 
-  // Sort ledger by date descending, take top 10
+  // Sort all entries newest-first then paginate in-memory
   ledger.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  const topLedger = ledger.slice(0, 10)
+
+  const totalEntries = ledger.length
+  const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE))
+  const pagedLedger = ledger.slice(offset, offset + PAGE_SIZE)
 
   return {
     stats: safeStats,
     heroClass,
     rewards: rewardsWithStatus,
-    ledger: topLedger
+    ledger: pagedLedger,
+    page,
+    totalPages,
+    totalEntries,
   }
 }
 
-export default async function RewardsPage() {
-  const { stats, heroClass, rewards, ledger } = await getRewardsData()
+export default async function RewardsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string }
+}) {
+  const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1)
+  const { stats, heroClass, rewards, ledger, totalPages, totalEntries } = await getRewardsData(page)
 
   return (
     <main
       className="flex-1 px-gutter py-gutter space-y-stack-lg max-w-5xl w-full mx-auto md:py-8 pb-28 md:pb-8"
       id="rewards-main"
     >
-      <TreasuryHero 
-        gpBalance={stats.gp_balance} 
-        level={stats.current_level} 
-        heroClass={heroClass} 
+      <TreasuryHero
+        gpBalance={stats.gp_balance}
+        level={stats.current_level}
+        heroClass={heroClass}
       />
 
       {/* System Shop Section */}
@@ -136,7 +141,7 @@ export default async function RewardsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FreezeTokenShopCard 
+          <FreezeTokenShopCard
             freezeTokens={stats.freeze_tokens}
             gpBalance={stats.gp_balance}
           />
@@ -172,12 +177,24 @@ export default async function RewardsPage() {
 
       {/* Treasury Ledger Section */}
       <section>
-        <h2 className="font-headline-lg text-2xl text-on-surface mb-6">Treasury Ledger</h2>
-        
+        <div className="flex justify-between items-end mb-6">
+          <div>
+            <h2 className="font-headline-lg text-2xl text-on-surface">Treasury Ledger</h2>
+            <p className="font-label-mono text-xs text-on-surface-variant mt-1 uppercase tracking-wider">
+              {totalEntries} total transactions
+            </p>
+          </div>
+          {totalPages > 1 && (
+            <span className="font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+              Page {page} of {totalPages}
+            </span>
+          )}
+        </div>
+
         <div className="glass-panel rounded-xl overflow-hidden">
           {ledger.length === 0 ? (
             <div className="p-8 text-center text-on-surface-variant font-label-mono">
-              No recent transactions.
+              No transactions yet.
             </div>
           ) : (
             <div className="flex flex-col">
@@ -186,12 +203,58 @@ export default async function RewardsPage() {
               ))}
             </div>
           )}
-          
-          {ledger.length > 0 && (
-            <div className="p-4 bg-surface-container-low text-center border-t border-outline-variant/20">
-              <button className="font-label-mono text-sm text-primary uppercase tracking-wider hover:underline">
-                View Full Ledger
-              </button>
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="p-4 bg-surface-container-low border-t border-outline-variant/20 flex items-center justify-between gap-4">
+              {page > 1 ? (
+                <Link
+                  href={`/rewards?page=${page - 1}`}
+                  className="flex items-center gap-1.5 font-label-mono text-sm text-primary uppercase tracking-wider hover:text-primary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base leading-none">arrow_back</span>
+                  Prev
+                </Link>
+              ) : (
+                <span className="font-label-mono text-sm text-on-surface-variant/30 uppercase tracking-wider flex items-center gap-1.5 cursor-not-allowed">
+                  <span className="material-symbols-outlined text-base leading-none">arrow_back</span>
+                  Prev
+                </span>
+              )}
+
+              {/* Page indicator dots — capped at 10 to avoid overflow */}
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map(p => (
+                  <Link
+                    key={p}
+                    href={`/rewards?page=${p}`}
+                    className={`rounded-full transition-all duration-200 ${
+                      p === page
+                        ? 'bg-primary w-4 h-2'
+                        : 'bg-outline-variant hover:bg-primary/50 w-2 h-2'
+                    }`}
+                    aria-label={`Page ${p}`}
+                  />
+                ))}
+                {totalPages > 10 && (
+                  <span className="font-label-mono text-xs text-on-surface-variant">…</span>
+                )}
+              </div>
+
+              {page < totalPages ? (
+                <Link
+                  href={`/rewards?page=${page + 1}`}
+                  className="flex items-center gap-1.5 font-label-mono text-sm text-primary uppercase tracking-wider hover:text-primary-container transition-colors"
+                >
+                  Next
+                  <span className="material-symbols-outlined text-base leading-none">arrow_forward</span>
+                </Link>
+              ) : (
+                <span className="font-label-mono text-sm text-on-surface-variant/30 uppercase tracking-wider flex items-center gap-1.5 cursor-not-allowed">
+                  Next
+                  <span className="material-symbols-outlined text-base leading-none">arrow_forward</span>
+                </span>
+              )}
             </div>
           )}
         </div>
