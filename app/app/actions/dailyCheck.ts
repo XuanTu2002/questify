@@ -1,15 +1,16 @@
 'use server'
 
 import { supabase, USER_ID } from '@/lib/supabase'
-import { recurringMissPenalty, deadlineLatePenalty, daysLate } from '@/lib/game/penalty'
+import { recurringMissPenalty, deadlineLatePenalty } from '@/lib/game/penalty'
 import type { UserStats, Config, Task } from '@/lib/types'
+import { todayVN, toVNDateStr } from '@/lib/utils'
 
 /**
  * Runs lazily to process missed days, consume freeze tokens, break streaks,
  * and apply penalties for missed recurring tasks or overdue deadlines.
  */
 export async function applyDailyCheck() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayVN()
   
   // 1. Fetch user stats and config
   const { data: stats } = await supabase.from('user_stats').select('*').eq('user_id', USER_ID).single<UserStats>()
@@ -128,7 +129,7 @@ export async function applyDailyCheck() {
   for (let i = 1; i < diffDays; i++) {
     const processDate = new Date(lastDate)
     processDate.setDate(processDate.getDate() + i)
-    const processDateStr = processDate.toISOString().slice(0, 10)
+    const processDateStr = toVNDateStr(processDate)
 
     let streakKept = false
     let freezeUsed = false

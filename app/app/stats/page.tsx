@@ -4,6 +4,7 @@ import WeeklyOutput from '@/components/stats/WeeklyOutput'
 import ConsistencyHeatmap from '@/components/stats/ConsistencyHeatmap'
 import SkillDistribution, { SkillXP } from '@/components/stats/SkillDistribution'
 import MilestoneProjection from '@/components/stats/MilestoneProjection'
+import { todayVN } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ async function getStatsData() {
   const safeStats = stats ?? { gp_balance: 0, current_level: 1, total_xp: 0 } as UserStats
 
   // 2. Fetch last 30 days of daily logs
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const thirtyDaysAgo = todayVN(-30 * 24 * 60 * 60 * 1000)
   const { data: logs } = await supabase
     .from('daily_logs')
     .select('*')
@@ -80,7 +81,7 @@ export default async function StatsPage() {
   const { stats, logs, rewards, skills } = await getStatsData()
 
   // For WeeklyOutput and MilestoneProjection, we need exactly the last 7 days of logs from our dataset
-  const sevenDaysAgoStr = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const sevenDaysAgoStr = todayVN(-7 * 24 * 60 * 60 * 1000)
   const last7Logs = logs.filter(l => l.log_date > sevenDaysAgoStr)
 
   return (

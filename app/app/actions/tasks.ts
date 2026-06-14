@@ -5,6 +5,7 @@ import { supabase, USER_ID } from '@/lib/supabase'
 import { levelFromTotalXP } from '@/lib/game/xp'
 import { streakBonus, freezeTokensAtMilestone, streakMilestoneBonus } from '@/lib/game/streak'
 import { applyDailyCheck } from './dailyCheck'
+import { todayVN } from '@/lib/utils'
 import type { ActionResult, Task, UserStats } from '@/lib/types'
 
 /** Completes a task — awards GP/XP, updates streak, logs daily record */
@@ -84,7 +85,7 @@ export async function completeTask(
   const leveledUp = newLevel > stats.current_level
 
   // 6. Compute today date
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayVN()
 
   // 7. Check daily log and threshold
   const { data: existingLog } = await supabase
