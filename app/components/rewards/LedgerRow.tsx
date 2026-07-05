@@ -22,7 +22,7 @@ export default function LedgerRow({ entry }: LedgerRowProps) {
       <div className="flex-1 flex flex-col">
         <span className="font-body-md text-on-surface leading-tight mb-0.5 line-clamp-1">{entry.title}</span>
         <span className="font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
-          {isEarn ? 'Earned on' : 'Claimed on'} {new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+          {isEarn ? 'Earned on' : 'Purchased on'} {new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </span>
       </div>
 

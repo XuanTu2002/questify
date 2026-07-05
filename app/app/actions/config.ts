@@ -60,7 +60,14 @@ export async function deleteCategory(categoryId: string): Promise<ActionResult> 
 
 /* ─── Rewards (Milestones) CRUD ──────────────────────────────────────────── */
 
-export async function createReward(data: { title: string; description?: string; gp_cost: number; required_level?: number }): Promise<ActionResult> {
+export async function createReward(data: {
+  title: string
+  description?: string
+  gp_cost: number
+  required_level?: number
+  is_repeatable?: boolean
+  tier?: 'low' | 'medium' | 'high'
+}): Promise<ActionResult> {
   const { error } = await supabase
     .from('rewards')
     .insert({
@@ -69,10 +76,13 @@ export async function createReward(data: { title: string; description?: string; 
       description: data.description || null,
       gp_cost: data.gp_cost,
       required_level: data.required_level || 1,
-      icon: 'workspace_premium'
+      icon: 'workspace_premium',
+      is_repeatable: data.is_repeatable ?? true,
+      tier: data.tier ?? 'medium',
+      is_system: false,
     })
 
-  if (error) return { success: false, error: 'Failed to create milestone.' }
+  if (error) return { success: false, error: 'Failed to create shop item.' }
   
   revalidatePath('/config')
   revalidatePath('/rewards')
@@ -95,18 +105,24 @@ export async function deleteReward(rewardId: string): Promise<ActionResult> {
 
 export async function updateReward(
   rewardId: string,
-  data: { title: string; description?: string; gp_cost: number; required_level?: number }
+  data: {
+    title: string
+    description?: string
+    gp_cost: number
+    required_level?: number
+    is_repeatable?: boolean
+    tier?: 'low' | 'medium' | 'high'
+  }
 ): Promise<ActionResult> {
-  // Block edits on claimed milestones
-  const { data: claim } = await supabase
-    .from('reward_claims')
-    .select('id')
-    .eq('user_id', USER_ID)
-    .eq('reward_id', rewardId)
+  // Block edits on system items
+  const { data: reward } = await supabase
+    .from('rewards')
+    .select('is_system')
+    .eq('id', rewardId)
     .single()
 
-  if (claim) {
-    return { success: false, error: 'Cannot edit a claimed milestone.' }
+  if ((reward as any)?.is_system) {
+    return { success: false, error: 'Cannot edit system items.' }
   }
 
   const { error } = await supabase
@@ -116,11 +132,13 @@ export async function updateReward(
       description: data.description || null,
       gp_cost: data.gp_cost,
       required_level: data.required_level || 1,
+      is_repeatable: data.is_repeatable ?? true,
+      tier: data.tier ?? 'medium',
     })
     .eq('id', rewardId)
     .eq('user_id', USER_ID)
 
-  if (error) return { success: false, error: 'Failed to update milestone.' }
+  if (error) return { success: false, error: 'Failed to update shop item.' }
 
   revalidatePath('/config')
   revalidatePath('/rewards')

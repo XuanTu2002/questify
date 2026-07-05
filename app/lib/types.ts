@@ -83,6 +83,9 @@ export interface Reward {
   required_level: number
   icon: string
   sort_order: number
+  is_repeatable: boolean
+  tier: 'low' | 'medium' | 'high'
+  is_system: boolean
 }
 
 export interface RewardClaim {
@@ -133,17 +136,20 @@ export interface QuestWithSteps extends Quest {
   totalSteps: number
 }
 
-/** Reward with computed eligibility state */
+/** Reward with computed eligibility state for shop display */
 export interface RewardWithStatus extends Reward {
-  state: 'claimable' | 'locked' | 'claimed'
-  claimedAt?: string
+  state: 'buyable' | 'locked' | 'purchased'
+  /** For one-time items only: timestamp of purchase. Undefined for repeatable. */
+  purchasedAt?: string
+  /** For system freeze token: current count held */
+  currentCount?: number
 }
 
 /** Ledger entry merging reward_claims and task_completions */
 export interface LedgerEntry {
   id: string
   title: string
-  type: 'claim' | 'earn'
+  type: 'claim' | 'earn' | 'purchase'
   amount: number
   date: string
   icon: string

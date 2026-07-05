@@ -1,9 +1,8 @@
 import { supabase, USER_ID } from '@/lib/supabase'
-import type { UserStats, Reward, RewardClaim, TaskCompletion, LedgerEntry, RewardWithStatus } from '@/lib/types'
+import type { UserStats, Reward, RewardClaim, LedgerEntry, RewardWithStatus } from '@/lib/types'
 import TreasuryHero from '@/components/rewards/TreasuryHero'
-import MilestoneCard from '@/components/rewards/MilestoneCard'
+import ShopItemCard from '@/components/rewards/ShopItemCard'
 import LedgerRow from '@/components/rewards/LedgerRow'
-import FreezeTokenShopCard from '@/components/rewards/FreezeTokenShopCard'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -20,18 +19,19 @@ async function getRewardsData(page: number) {
     .eq('user_id', USER_ID)
     .single<UserStats>()
 
-  const safeStats = stats ?? { gp_balance: 0, current_level: 1, total_xp: 0 } as UserStats
+  const safeStats = stats ?? { gp_balance: 0, current_level: 1, total_xp: 0, freeze_tokens: 0 } as UserStats
   const heroClass = 'Shadow Walker'
 
-  // 2. Fetch all milestones
+  // 2. Fetch all shop items ordered by tier desc then gp_cost desc
   const { data: rewards } = await supabase
     .from('rewards')
     .select('*')
-    .order('sort_order', { ascending: true })
+    .eq('user_id', USER_ID)
+    .order('gp_cost', { ascending: false })
 
   const typedRewards = (rewards as Reward[]) ?? []
 
-  // 3. Fetch user's claims
+  // 3. Fetch all purchase records
   const { data: claims } = await supabase
     .from('reward_claims')
     .select('*')
@@ -39,42 +39,60 @@ async function getRewardsData(page: number) {
     .order('claimed_at', { ascending: false })
 
   const typedClaims = (claims as RewardClaim[]) ?? []
+  const purchasedRewardIds = new Set(typedClaims.map(c => c.reward_id))
 
-  const claimedRewardIds = new Set(typedClaims.map(c => c.reward_id))
-  const claimMap = new Map(typedClaims.map(c => [c.reward_id, c.claimed_at]))
+  // 4. Build shop items with computed state — hide purchased one-time items
+  const shopItems: RewardWithStatus[] = typedRewards
+    .filter(reward => {
+      // One-time items already purchased are removed from shop view
+      if (!reward.is_repeatable && purchasedRewardIds.has(reward.id)) return false
+      return true
+    })
+    .map(reward => {
+      let state: RewardWithStatus['state'] = 'locked'
 
-  // 4. Enrich rewards with status
-  const rewardsWithStatus: RewardWithStatus[] = typedRewards.map(reward => {
-    let state: RewardWithStatus['state'] = 'locked'
+      const meetsLevel = safeStats.current_level >= reward.required_level
+      const hasGP = safeStats.gp_balance >= reward.gp_cost
 
-    if (claimedRewardIds.has(reward.id)) {
-      state = 'claimed'
-    } else if (safeStats.current_level >= reward.required_level && safeStats.gp_balance >= reward.gp_cost) {
-      state = 'claimable'
-    }
+      if (meetsLevel && hasGP) {
+        state = 'buyable'
+      }
 
-    return { ...reward, state, claimedAt: claimMap.get(reward.id) }
-  })
+      // System Freeze Token: locked when at cap
+      if (reward.is_system && reward.icon === 'ac_unit' && safeStats.freeze_tokens >= 3) {
+        state = 'locked'
+      }
 
-  // 5. Fetch ALL task completions (all-time, no date filter) for unified ledger
+      return {
+        ...reward,
+        state,
+        currentCount: reward.is_system && reward.icon === 'ac_unit' ? safeStats.freeze_tokens : undefined,
+      }
+    })
+
+  // Group by tier for display: Epic → Rare → Common
+  const highTier = shopItems.filter(i => i.tier === 'high')
+  const mediumTier = shopItems.filter(i => i.tier === 'medium')
+  const lowTier = shopItems.filter(i => i.tier === 'low')
+
+  // 5. Build unified ledger (all-time)
   const { data: taskCompletions } = await supabase
     .from('task_completions')
     .select('id, gp_awarded, completed_at, tasks(title)')
     .eq('user_id', USER_ID)
     .order('completed_at', { ascending: false })
 
-  // Build unified ledger
   const ledger: LedgerEntry[] = []
 
   for (const claim of typedClaims) {
     const reward = typedRewards.find(r => r.id === claim.reward_id)
     ledger.push({
       id: claim.id,
-      title: reward?.title || 'Unknown Reward',
-      type: 'claim',
+      title: reward?.title || 'Unknown Item',
+      type: 'purchase',
       amount: claim.gp_spent,
       date: claim.claimed_at,
-      icon: 'workspace_premium'
+      icon: 'shopping_bag'
     })
   }
 
@@ -92,7 +110,6 @@ async function getRewardsData(page: number) {
     }
   }
 
-  // Sort all entries newest-first then paginate in-memory
   ledger.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const totalEntries = ledger.length
@@ -102,12 +119,42 @@ async function getRewardsData(page: number) {
   return {
     stats: safeStats,
     heroClass,
-    rewards: rewardsWithStatus,
+    highTier,
+    mediumTier,
+    lowTier,
     ledger: pagedLedger,
     page,
     totalPages,
     totalEntries,
   }
+}
+
+function TierSection({
+  label,
+  icon,
+  colorClass,
+  items,
+}: {
+  label: string
+  icon: string
+  colorClass: string
+  items: RewardWithStatus[]
+}) {
+  if (items.length === 0) return null
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`material-symbols-outlined text-lg ${colorClass}`}>{icon}</span>
+        <h3 className={`font-label-mono text-sm uppercase tracking-wider ${colorClass}`}>{label}</h3>
+        <div className="flex-1 h-px bg-outline-variant/30" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {items.map(item => (
+          <ShopItemCard key={item.id} reward={item} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default async function RewardsPage({
@@ -117,7 +164,9 @@ export default async function RewardsPage({
 }) {
   const { page: pageParam } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
-  const { stats, heroClass, rewards, ledger, totalPages, totalEntries } = await getRewardsData(page)
+  const { stats, heroClass, highTier, mediumTier, lowTier, ledger, totalPages, totalEntries } = await getRewardsData(page)
+
+  const isEmpty = highTier.length === 0 && mediumTier.length === 0 && lowTier.length === 0
 
   return (
     <main
@@ -130,53 +179,29 @@ export default async function RewardsPage({
         heroClass={heroClass}
       />
 
-      {/* System Shop Section */}
+      {/* ── Merchant's Wares Shop Section ── */}
       <section className="mb-12">
         <div className="flex justify-between items-end mb-6">
           <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">System Shop</h2>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface">Merchant&apos;s Wares</h2>
             <p className="font-label-mono text-label-mono text-on-surface-variant mt-1 uppercase tracking-wider">
-              Essential utility items
+              Spend your hard-earned GP
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FreezeTokenShopCard
-            freezeTokens={stats.freeze_tokens}
-            gpBalance={stats.gp_balance}
-          />
-        </div>
-      </section>
+        <TierSection label="Epic" icon="local_fire_department" colorClass="text-error" items={highTier} />
+        <TierSection label="Rare" icon="bolt" colorClass="text-primary" items={mediumTier} />
+        <TierSection label="Common" icon="eco" colorClass="text-secondary" items={lowTier} />
 
-      {/* Milestone Spoils Section */}
-      <section className="mb-12">
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Milestone Spoils</h2>
-            <p className="font-label-mono text-label-mono text-on-surface-variant mt-1 uppercase tracking-wider">
-              Exchange GP for real-life rewards
-            </p>
+        {isEmpty && (
+          <div className="p-12 text-center text-on-surface-variant border border-dashed border-outline-variant rounded-xl font-label-mono">
+            No items in shop. Go to Codex to add some!
           </div>
-          <button className="hidden md:flex items-center gap-1 font-label-mono text-sm text-primary hover:text-primary-container transition-colors">
-            <span className="material-symbols-outlined text-sm">filter_list</span>
-            Filter
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rewards.map(reward => (
-            <MilestoneCard key={reward.id} reward={reward} />
-          ))}
-          {rewards.length === 0 && (
-            <div className="col-span-full p-12 text-center text-on-surface-variant border border-dashed border-outline-variant rounded-xl font-label-mono">
-              No milestones defined. Go to Config to add some!
-            </div>
-          )}
-        </div>
+        )}
       </section>
 
-      {/* Treasury Ledger Section */}
+      {/* ── Treasury Ledger Section ── */}
       <section id="ledger">
         <div className="flex justify-between items-end mb-6">
           <div>
@@ -223,7 +248,6 @@ export default async function RewardsPage({
                 </span>
               )}
 
-              {/* Page indicator dots — capped at 10 to avoid overflow */}
               <div className="flex items-center gap-1.5">
                 {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => i + 1).map(p => (
                   <Link

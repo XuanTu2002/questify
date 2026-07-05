@@ -1,7 +1,7 @@
 import { supabase, USER_ID } from '@/lib/supabase'
 import type { Category, Reward, Config } from '@/lib/types'
 import CategoryList from '@/components/config/CategoryList'
-import MilestoneEditor from '@/components/config/MilestoneEditor'
+import ShopItemEditor from '@/components/config/ShopItemEditor'
 import ConfigPanels from '@/components/config/ConfigPanels'
 
 export const dynamic = 'force-dynamic'
@@ -18,14 +18,6 @@ async function getConfigData() {
     .select('*')
     .eq('user_id', USER_ID)
     .order('sort_order', { ascending: true })
-
-  // Fetch which rewards have been claimed (to lock editing on those)
-  const { data: claims } = await supabase
-    .from('reward_claims')
-    .select('reward_id')
-    .eq('user_id', USER_ID)
-
-  const claimedIds = new Set((claims || []).map((c: { reward_id: string }) => c.reward_id))
 
   let { data: config } = await supabase
     .from('config')
@@ -53,13 +45,12 @@ async function getConfigData() {
   return {
     categories: (categories as Category[]) || [],
     rewards: (rewards as Reward[]) || [],
-    claimedIds,
     config
   }
 }
 
 export default async function ConfigPage() {
-  const { categories, rewards, claimedIds, config } = await getConfigData()
+  const { categories, rewards, config } = await getConfigData()
 
   return (
     <main
@@ -76,7 +67,7 @@ export default async function ConfigPage() {
       <div className="space-y-6">
         <CategoryList categories={categories} />
         
-        <MilestoneEditor rewards={rewards} claimedIds={claimedIds} />
+        <ShopItemEditor rewards={rewards} />
         
         <ConfigPanels config={config!} />
       </div>
